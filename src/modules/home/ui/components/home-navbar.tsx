@@ -56,7 +56,7 @@ const HomeNavBar = () => {
 
           <Button asChild>
             <a
-              href="https://bit.ly/3Z0WpGx"
+              href="https://bit.ly/sanjay-j-resume"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center"

@@ -6,26 +6,22 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const ToggleThemeButton = () => {
-  const { setTheme, theme, systemTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [currTheme, setCurrTheme] = useState<string>("system");
   const { play: playSwitchSound } = useSound("sounds/laser.mp3");
 
   useEffect(() => {
-    if (!theme) {
-      setTheme("system");
-      if (systemTheme) {
-        setCurrTheme(systemTheme);
-      } else {
-        setCurrTheme("light");
-      }
+    if (!resolvedTheme) {
+      setTheme("light");
+      setCurrTheme("light");
     } else {
-      setCurrTheme(theme);
+      setCurrTheme(resolvedTheme);
     }
-  }, [theme, systemTheme, setCurrTheme, setTheme]);
+  }, [setCurrTheme, setTheme, resolvedTheme]);
 
   const handleToggle = () => {
     playSwitchSound();
-    const newTheme = currTheme == "dark" ? "ligh" : "dark";
+    const newTheme = currTheme == "dark" ? "light" : "dark";
     setCurrTheme(newTheme);
     setTheme(newTheme);
   };

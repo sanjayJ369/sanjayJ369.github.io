@@ -17,7 +17,7 @@
   --main-foreground: #000000;
   --main: #ffab5b;
   --accent: #0064fb;
-  --border: #000000; /* Black borders - all borders */
+  --border: rgb(42, 42, 42); /* Black borders - all borders */
   --ring: #ffab5b;
   --overlay: rgba(0, 0, 0, 0.85);
   --shadow: 4px 4px 0px 0px #000000; /* Harsh black shadows */
@@ -43,7 +43,7 @@
   --main-foreground: #ffffff; /* Changed to WHITE text for main color elements */
   --main: #000000; /* SAME vibrant red - 10% for key elements */
   --accent: #4cc9ff; /* Lighter blue - 5% for accents */
-  --border: #ffffff; /* White borders - all borders */
+  --border: rgb(192, 192, 192); /* White borders - all borders */
   --ring: #ff3c38;
   --overlay: rgba(255, 255, 255, 0.1);
   --shadow: 4px 4px 0px 0px #ffffff; /* Harsh white shadows */
