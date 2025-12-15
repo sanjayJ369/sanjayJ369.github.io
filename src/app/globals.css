@@ -155,8 +155,10 @@
         transparent 2px
       ),
       linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridMove 2s linear infinite;
+    background-size: var(--grid-size, 40px) var(--grid-size, 40px);
+    animation: gridMove var(--grid-animation-duration, 2s) linear infinite;
+    animation-play-state: var(--grid-animation-state, running);
+    transition: background-size 0.5s ease-in-out;
   }
 
   @keyframes tvScan {

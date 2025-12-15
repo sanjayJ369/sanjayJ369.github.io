@@ -28,7 +28,10 @@ export function useSound(path: string) {
           });
         });
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      if ((err as Error).name == "NotAllowedError") {
+        return;
+      }
       console.warn("Failed to play click sound:", err);
     }
   };

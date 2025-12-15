@@ -6,8 +6,9 @@ const ProfileCard = () => {
   // Marquee items - neobrutalist keywords and skills
   const marqueeItems = [
     "MY",
-    "MAP",
-    "REDUCE",
+    "GOOGLE",
+    "FILE",
+    "SYSTEM",
     "BLOG",
     "IS",
     "OUT!",
