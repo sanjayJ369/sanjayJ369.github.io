@@ -15,6 +15,17 @@ The primary goal of the **GoDBMS** project was to gain a deep understanding of *
 
 ---
 
+## Demo
+
+Check out a short demo of GoDBMS in action:
+
+<video controls width="100%">
+  <source src="/assets/go-dbms/video-1.webm" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+---
+
 ## The Process
 
 **GoDBMS** was developed through a systematic, step-by-step approach:
@@ -40,12 +51,3 @@ The entire process was geared towards gaining practical insights into the inner 
 - **SQL-like query language**: Simplifies database interaction.
 
 ---
-
-## Demo
-
-Check out a short demo of GoDBMS in action:
-
-<video controls width="100%">
-  <source src="/assets/go-dbms/video-1.webm" type="video/webm">
-  Your browser does not support the video tag.
-</video>
