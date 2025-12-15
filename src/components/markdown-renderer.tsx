@@ -37,43 +37,43 @@ export default function MarkdownRenderer({ content }: Props) {
           h1: ({ node, ...props }) => (
             <h1
               {...props}
-              className="text-4xl md:text-5xl font-heading font-black mt-12 mb-6 uppercase tracking-tight break-words text-neutral-900 dark:text-neutral-100"
+              className="text-5xl md:text-7xl font-heading font-black mt-16 mb-8 uppercase tracking-tight break-words text-neutral-900 dark:text-neutral-100"
             />
           ),
           h2: ({ node, ...props }) => (
             <h2
               {...props}
-              className="text-3xl md:text-4xl font-heading font-bold mt-10 mb-5 border-b-4 border-border pb-2 break-words text-neutral-800 dark:text-neutral-200"
+              className="text-4xl md:text-5xl font-heading font-black mt-14 mb-6 border-b-4 border-border pb-4 break-words text-neutral-900 dark:text-neutral-100"
             />
           ),
           h3: ({ node, ...props }) => (
             <h3
               {...props}
-              className="text-2xl md:text-3xl font-heading font-bold mt-8 mb-4 break-words text-neutral-800 dark:text-neutral-200"
+              className="text-3xl md:text-4xl font-heading font-bold mt-10 mb-5 break-words text-neutral-800 dark:text-neutral-200"
             />
           ),
           h4: ({ node, ...props }) => (
             <h4
               {...props}
-              className="text-xl md:text-2xl font-heading font-bold mt-6 mb-3 break-words text-neutral-700 dark:text-neutral-300"
+              className="text-2xl md:text-3xl font-heading font-bold mt-8 mb-4 break-words text-neutral-800 dark:text-neutral-200"
             />
           ),
           h5: ({ node, ...props }) => (
             <h5
               {...props}
-              className="text-lg md:text-xl font-heading font-bold mt-6 mb-3 break-words text-neutral-700 dark:text-neutral-300"
+              className="text-xl md:text-2xl font-heading font-bold mt-8 mb-4 break-words text-neutral-700 dark:text-neutral-300"
             />
           ),
           h6: ({ node, ...props }) => (
             <h6
               {...props}
-              className="text-base md:text-lg font-heading font-bold mt-6 mb-3 uppercase break-words text-neutral-600 dark:text-neutral-400"
+              className="text-lg md:text-xl font-heading font-bold mt-8 mb-4 uppercase break-words text-neutral-600 dark:text-neutral-400"
             />
           ),
           p: ({ node, ...props }) => (
             <p
               {...props}
-              className="my-4 leading-relaxed text-lg text-neutral-700 dark:text-neutral-300"
+              className="my-6 leading-loose text-lg md:text-xl text-neutral-700 dark:text-neutral-300"
             />
           ),
           blockquote: ({ node, ...props }) => (
@@ -88,7 +88,12 @@ export default function MarkdownRenderer({ content }: Props) {
               className="bg-[#1e1e1e] text-[#d4d4d4] p-6 rounded-base border-4 border-border shadow-shadow my-8 overflow-x-auto text-sm md:text-base font-mono"
             />
           ),
-          code: ({ node, className, children, ...props }: any) => {
+          code: ({
+            node,
+            className,
+            children,
+            ...props
+          }: React.ComponentPropsWithoutRef<"code"> & { node?: object }) => {
             const match = /language-(\w+)/.exec(className || "");
             const isInline = !match && !String(children).includes("\n");
             return isInline ? (
@@ -113,13 +118,13 @@ export default function MarkdownRenderer({ content }: Props) {
           ul: ({ node, ...props }) => (
             <ul
               {...props}
-              className="list-disc pl-10 my-4 space-y-2 marker:text-neutral-900 dark:marker:text-neutral-100 text-neutral-700 dark:text-neutral-300"
+              className="list-disc pl-10 my-4 space-y-2 marker:text-neutral-900 dark:marker:text-neutral-100 text-neutral-700 dark:text-neutral-300 text-lg md:text-xl"
             />
           ),
           ol: ({ node, ...props }) => (
             <ol
               {...props}
-              className="list-decimal pl-10 my-4 space-y-2 marker:text-neutral-900 dark:marker:text-neutral-100 font-bold text-neutral-700 dark:text-neutral-300"
+              className="list-decimal pl-10 my-4 space-y-2 marker:text-neutral-900 dark:marker:text-neutral-100 font-bold text-neutral-700 dark:text-neutral-300 text-lg md:text-xl"
             />
           ),
           li: ({ node, ...props }) => <li {...props} className="pl-2" />,

@@ -66,7 +66,7 @@ export default async function SectionPage({ params }: PageProps) {
       <SlowBackground />
       <div className="w-4/5 bg-secondary-background my-4 p-3 retro-border">
         <div className="border-b-4 border-border pb-8 mb-8">
-          <h1 className="text-4xl md:text-6xl font-black uppercase mb-6 tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-black uppercase mb-8 tracking-tight">
             {content.data.title}
           </h1>
 

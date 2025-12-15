@@ -10,7 +10,7 @@ const ContentCards = async ({ contentType }: ContentCardsProps) => {
   return content.map((data) => (
     <ContentCard
       path={`${contentType}/${data.slug}`}
-      key={data.date}
+      key={data.slug}
       data={data}
     />
   ));
