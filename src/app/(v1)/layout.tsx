@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Orbitron, Bungee } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import ClientLayout from "./client-layout";
 
 const jetBrainsMono = JetBrains_Mono({
