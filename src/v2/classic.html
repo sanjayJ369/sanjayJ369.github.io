@@ -1,0 +1,82 @@
+<title>Sanjay J Classic</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=VT323&display=swap">
+<style>
+/*__STYLE__*/
+</style>
+<script>document.documentElement.classList.add("js");</script>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar nav">
+  <a class="nav-home" href="#top">
+    <span class="nav-avatar"><canvas class="dither" data-src="__BASE__images/profile.png" data-pixel="2" role="img" aria-label="Sanjay J"></canvas></span>
+    <span class="nav-name">SANJAY</span>
+  </a>
+  <nav class="nav-links" aria-label="Elsewhere">
+    <a href="https://blog.sanjayj.dev" target="_blank" rel="noopener noreferrer" data-scramble>Blog</a>
+    <a href="https://linkedin.com/in/j-sanjay" target="_blank" rel="noopener noreferrer" data-scramble>LinkedIn</a>
+    <a href="https://bit.ly/sanjay-j-resume" target="_blank" rel="noopener noreferrer" data-scramble>Resume</a>
+    <a href="https://github.com/sanjayj369" target="_blank" rel="noopener noreferrer" data-scramble>GitHub</a>
+  </nav>
+  <button type="button" class="swatch" id="palette-btn" aria-label="Change colours"><span id="palette-swatch" aria-hidden="true"></span></button>
+</header>
+
+<main id="main" class="page">
+  <section class="profile intro" id="top" aria-label="About">
+    <a class="profile-banner" href="https://blog.sanjayj.dev" target="_blank" rel="noopener noreferrer" aria-label="My Google File System blog is out. Give it a read.">
+      <span class="banner-track" id="banner" aria-hidden="true"></span>
+    </a>
+    <div class="profile-body">
+      <div class="profile-avatar">
+        <canvas class="dither" data-src="__BASE__images/profile.png" data-pixel="3" data-lamp role="img" aria-label="Portrait of Sanjay J"></canvas>
+      </div>
+      <div class="profile-text">
+        <h1 class="glitch" data-text="Hi, I'm Sanjay" data-glitch-loop>Hi, I'm Sanjay</h1>
+        <p>
+          A computer science engineer who learns by building the thing itself: databases from the
+          disk up, small developer tools, and the occasional game. Away from the keyboard I make
+          3D art and play chess. Have a look around.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="projects" id="projects">
+    <h2 class="projects-head">Projects <span id="project-count"></span></h2>
+    <div class="cards" id="work-grid"></div>
+  </section>
+
+  <footer class="foot page-foot">
+    <span>India · <span id="clock">--:--</span> IST</span>
+    <a href="__V1_URL__">Previous version</a>
+  </footer>
+</main>
+
+<div class="entry" id="entry" hidden>
+  <div class="entry-scrim" data-close></div>
+  <article class="entry-window" role="dialog" aria-modal="true" aria-labelledby="entry-title">
+    <button type="button" class="entry-close" data-close aria-label="Close project">×</button>
+    <div class="entry-scroll" id="entry-scroll" data-native-scroll>
+      <header class="entry-head">
+        <h2 class="entry-title glitch" id="entry-title" data-text=""></h2>
+        <p class="entry-lede" id="entry-lede"></p>
+        <dl class="entry-meta" id="entry-meta"></dl>
+      </header>
+      <div class="entry-plate" id="entry-plate">
+        <canvas class="dither" id="entry-canvas" data-pixel="3" aria-hidden="true"></canvas>
+        <img id="entry-img" alt="">
+      </div>
+      <div class="prose" id="entry-body"></div>
+      <button type="button" class="entry-next" id="entry-next">
+        <span class="label">Next</span>
+        <span class="entry-next-title" id="entry-next-title"></span>
+      </button>
+    </div>
+  </article>
+</div>
+
+<div class="cursor" id="cursor" aria-hidden="true"></div>
+<div class="crt" aria-hidden="true"></div>

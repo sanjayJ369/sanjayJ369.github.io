@@ -263,7 +263,8 @@
   /* ------------------------------------------------------------------
      Content
      ------------------------------------------------------------------ */
-  $("#work-list").innerHTML = PROJECTS.map((p, i) => `
+  const workList = $("#work-list"), workGrid = $("#work-grid");
+  if (workList) workList.innerHTML = PROJECTS.map((p, i) => `
     <li class="reveal" style="--delay:${(i % 5) * 0.05}s">
       <button type="button" class="work-row" data-slug="${p.slug}">
         <span class="work-name"><span data-scramble>${p.title}</span></span>
@@ -272,14 +273,45 @@
       </button>
     </li>`).join("");
 
+  // Card grid (classic layout).
+  if (workGrid) {
+    $("#project-count").textContent = String(PROJECTS.length).padStart(2, "0");
+    workGrid.innerHTML = PROJECTS.map((p, i) => `
+      <article class="card reveal" style="--delay:${(i % 3) * 0.08}s">
+        ${p.image ? `<button type="button" class="card-media" data-slug="${p.slug}" aria-label="Open ${p.title}">
+          <canvas class="dither" data-src="${p.image}" data-pixel="2" aria-hidden="true"></canvas>
+          <img src="${p.image}" alt="" loading="lazy">
+        </button>` : ""}
+        <div class="card-body">
+          <h3 class="card-title">${p.title}</h3>
+          <ul class="card-tags">${p.tags.slice(0, 4).map((t) => `<li>${t}</li>`).join("")}</ul>
+          <p class="card-desc">${p.description}</p>
+          <div class="card-actions">
+            ${p.demo ? `<a href="${p.demo}" target="_blank" rel="noopener noreferrer">Live ↗</a>` : ""}
+            ${p.repo ? `<a href="${p.repo}" target="_blank" rel="noopener noreferrer">Code ↗</a>` : ""}
+            <button type="button" class="card-open" data-slug="${p.slug}"><span data-scramble>Read more</span> →</button>
+          </div>
+        </div>
+      </article>`).join("");
+  }
+
+  // Scrolling banner (classic layout).
+  const banner = $("#banner");
+  if (banner) {
+    const row = `<span>My Google File System blog is out<i>·</i></span><span>Give it a read<i>·</i></span>`;
+    banner.innerHTML = row.repeat(3) + row.repeat(3);
+  }
+
   const scrub = $("#scrub");
-  scrub.setAttribute("aria-label", scrub.textContent);
-  scrub.innerHTML = scrub.textContent.split(" ").map((w) => `<span class="w" aria-hidden="true">${w} </span>`).join("");
-  const scrubWords = $$(".w", scrub);
+  if (scrub) {
+    scrub.setAttribute("aria-label", scrub.textContent);
+    scrub.innerHTML = scrub.textContent.split(" ").map((w) => `<span class="w" aria-hidden="true">${w} </span>`).join("");
+  }
+  const scrubWords = scrub ? $$(".w", scrub) : [];
 
   // Preview canvases for the work list.
   const peek = $("#peek"), peekFrame = $("#peek-frame");
-  if (finePointer) {
+  if (finePointer && workList) {
     peekFrame.innerHTML = PROJECTS.filter((p) => p.image)
       .map((p) => `<canvas class="dither" data-src="${p.image}" data-pixel="2" data-slug="${p.slug}"></canvas>`).join("");
   }
@@ -392,7 +424,7 @@
     el.classList.add("is-glitching");
     setTimeout(() => el.classList.remove("is-glitching"), 460);
   }
-  const name = $(".hero h1");
+  const name = $(".hero h1, [data-glitch-loop]");
   setTimeout(() => glitch(name), 1100);
   if (!reduced) {
     (function loop() {
@@ -413,7 +445,7 @@
         io.unobserve(e.target);
       }
     }, { rootMargin: "0px 0px -6% 0px" });
-    $$(".reveal, .section > .label, .facts > div, .links li, .scrub").forEach((el) => {
+    $$(".reveal, .section > .label, .facts > div, .links li, .scrub, .projects-head").forEach((el) => {
       if (el.getBoundingClientRect().top > innerHeight) {
         el.classList.add("pending");
         io.observe(el);
@@ -441,7 +473,7 @@
   }, { passive: true });
   if (finePointer && !reduced) root.classList.add("has-cursor");
 
-  const peekCanvases = $$("canvas", peekFrame);
+  const peekCanvases = peekFrame ? $$("canvas", peekFrame) : [];
   $$(".work-row").forEach((row) => {
     row.addEventListener("pointerenter", () => {
       const slug = row.dataset.slug;
@@ -450,11 +482,12 @@
       peek.classList.toggle("on", peeking);
     });
   });
-  $("#work-list").addEventListener("pointerleave", () => { peeking = false; peek.classList.remove("on"); });
+  workList?.addEventListener("pointerleave", () => { peeking = false; peek.classList.remove("on"); });
 
   /* ------------------------------------------------------------------
      Frame loop
      ------------------------------------------------------------------ */
+  let bannerX = 0, bannerV = 0.5, bannerSkew = 0, lastFrameY = scrollY;
   function frame(now) {
     requestAnimationFrame(frame);
     cpos.x = lerp(cpos.x, mouse.x, 0.35);
@@ -469,7 +502,19 @@
       ppos = { ...mouse };
     }
 
-    const sr = scrub.getBoundingClientRect();
+    // Banner drifts, and leans and speeds up with scrolling.
+    if (banner && !reduced) {
+      const v = scrollY - lastFrameY;
+      bannerV = lerp(bannerV, 0.5 + Math.abs(v) * 0.25, 0.08);
+      bannerSkew = lerp(bannerSkew, clamp(v * 0.3, -8, 8), 0.1);
+      const half = banner.scrollWidth / 2;
+      bannerX -= bannerV;
+      if (bannerX <= -half) bannerX += half;
+      banner.style.transform = `translate3d(${bannerX}px,0,0) skewX(${-bannerSkew}deg)`;
+    }
+    lastFrameY = scrollY;
+
+    const sr = scrub ? scrub.getBoundingClientRect() : { bottom: -1 };
     if (sr.bottom > 0 && sr.top < innerHeight) {
       const p = reduced ? 1 : clamp((innerHeight * 0.85 - sr.top) / (sr.height + innerHeight * 0.3));
       const lit = Math.round(p * scrubWords.length * 1.1);

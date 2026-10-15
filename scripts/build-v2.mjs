@@ -1,7 +1,9 @@
 // Builds the static v2 site from src/v2 and the project markdown.
 //
 //   node scripts/build-v2.mjs                 -> public/v2/index.html (served at /v2/)
-//   node scripts/build-v2.mjs --preview <dir> -> a self-contained copy with relative
+//                                             and public/v2/classic/index.html
+//   node scripts/build-v2.mjs --preview <dir> [--page minimal|classic]
+//                                             -> a self-contained copy with relative
 //                                                asset paths, for previewing elsewhere
 import { cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -14,6 +16,12 @@ const root = process.cwd();
 const src = path.join(root, "src/v2");
 const projectsDir = path.join(root, "src/content/projects");
 
+// Each layout: source html, extra stylesheet, output path under public/v2.
+const PAGES = {
+  minimal: { html: "page.html", css: [], out: "index.html", v1: "/" },
+  classic: { html: "classic.html", css: ["classic.css"], out: "classic/index.html", v1: "/" },
+};
+const pageArg = process.argv.indexOf("--page");
 const previewIndex = process.argv.indexOf("--preview");
 const previewDir = previewIndex > -1 ? path.resolve(process.argv[previewIndex + 1]) : null;
 // In the real site assets live at the domain root; in a preview they sit beside the page.
@@ -53,36 +61,39 @@ const projects = await Promise.all(
 );
 projects.sort((a, b) => b.date.localeCompare(a.date));
 
-const css = readFileSync(path.join(src, "style.css"), "utf8");
-const js = readFileSync(path.join(src, "app.js"), "utf8");
-const body = readFileSync(path.join(src, "page.html"), "utf8")
-  .replaceAll("__BASE__", base)
-  .replace("__V1_URL__", previewDir ? "https://sanjayj.dev/" : "/");
-
 // "</" inside inline JSON would end the script element early.
 const data = JSON.stringify(projects).replace(/<\//g, "<\\/");
+const js = readFileSync(path.join(src, "app.js"), "utf8");
 
-const fragment = `${body.replace("/*__STYLE__*/", css)}
+function fragment(page) {
+  const css = ["style.css", ...page.css].map((f) => readFileSync(path.join(src, f), "utf8")).join("\n");
+  const body = readFileSync(path.join(src, page.html), "utf8")
+    .replaceAll("__BASE__", base)
+    .replace("__V1_URL__", previewDir ? "https://sanjayj.dev/" : page.v1);
+  return `${body.replace("/*__STYLE__*/", css)}
 <script>window.__PROJECTS__ = ${data};</script>
 <script>
 ${js}
 </script>
 `;
+}
 
 if (previewDir) {
   // The preview host supplies the document skeleton, so ship the fragment only.
+  const page = PAGES[pageArg > -1 ? process.argv[pageArg + 1] : "minimal"];
   mkdirSync(previewDir, { recursive: true });
-  writeFileSync(path.join(previewDir, "index.html"), fragment);
+  writeFileSync(path.join(previewDir, "index.html"), fragment(page));
   for (const dir of ["assets", "images"]) {
     cpSync(path.join(root, "public", dir), path.join(previewDir, dir), { recursive: true });
   }
   console.log(`v2 preview written to ${previewDir}`);
 } else {
-  const out = path.join(root, "public/v2");
-  mkdirSync(out, { recursive: true });
-  writeFileSync(
-    path.join(out, "index.html"),
-    `<!doctype html>
+  for (const page of Object.values(PAGES)) {
+    const file = path.join(root, "public/v2", page.out);
+    mkdirSync(path.dirname(file), { recursive: true });
+    writeFileSync(
+      file,
+      `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -91,9 +102,10 @@ if (previewDir) {
 <link rel="icon" href="/images/profile.png">
 </head>
 <body>
-${fragment}</body>
+${fragment(page)}</body>
 </html>
 `
-  );
-  console.log("v2 written to public/v2/index.html");
+    );
+    console.log(`v2 written to ${path.relative(root, file)}`);
+  }
 }
