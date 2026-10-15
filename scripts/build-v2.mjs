@@ -61,6 +61,14 @@ const projects = await Promise.all(
 );
 projects.sort((a, b) => b.date.localeCompare(a.date));
 
+// Draft cards suggested from GitHub repositories; shown separately, marked as proposals.
+const proposed = JSON.parse(readFileSync(path.join(src, "proposed.json"), "utf8"));
+for (const p of proposed) {
+  const rendered = await remark().use(remarkGfm).use(html, { sanitize: false }).process(p.body);
+  const { body: _body, ...meta } = p;
+  projects.push({ ...meta, image: null, demo: null, proposed: true, html: String(rendered) });
+}
+
 // "</" inside inline JSON would end the script element early.
 const data = JSON.stringify(projects).replace(/<\//g, "<\\/");
 const js = readFileSync(path.join(src, "app.js"), "utf8");

@@ -6,7 +6,7 @@
 <style>
 /*__STYLE__*/
 </style>
-<script>document.documentElement.classList.add("js");</script>
+<script>(function(d){d.classList.add("js");if(d.dataset.theme)return;var t=null;try{t=localStorage.getItem("v2-theme")}catch(e){}d.dataset.theme=t||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark")})(document.documentElement);</script>
 
 <a class="skip" href="#main">Skip to content</a>
 
@@ -21,12 +21,14 @@
     <a href="https://bit.ly/sanjay-j-resume" target="_blank" rel="noopener noreferrer" data-scramble>Resume</a>
     <a href="https://github.com/sanjayj369" target="_blank" rel="noopener noreferrer" data-scramble>GitHub</a>
   </nav>
+  <button type="button" class="swatch theme-toggle" id="theme-btn" aria-label="Switch theme"><svg viewBox="0 0 8 8" width="14" height="14" aria-hidden="true" shape-rendering="crispEdges"><path class="sun" d="M3 0h2v1H3zM3 7h2v1H3zM0 3h1v2H0zM7 3h1v2H7zM1 1h1v1H1zM6 1h1v1H6zM1 6h1v1H1zM6 6h1v1H6zM2 2h4v4H2z"/><path class="moon" d="M3 1h3v1H3zM2 2h2v1H2zM1 3h2v2H1zM2 5h2v1H2zM3 6h3v1H3zM6 5h1v1H6z"/></svg></button>
   <button type="button" class="swatch" id="palette-btn" aria-label="Change colours"><span id="palette-swatch" aria-hidden="true"></span></button>
 </header>
 
 <main id="main" class="page">
   <section class="profile intro" id="top" aria-label="About">
     <a class="profile-banner" href="https://blog.sanjayj.dev" target="_blank" rel="noopener noreferrer" aria-label="My Google File System blog is out. Give it a read.">
+      <canvas class="field" id="field" aria-hidden="true"></canvas>
       <span class="banner-track" id="banner" aria-hidden="true"></span>
     </a>
     <div class="profile-body">
@@ -34,19 +36,41 @@
         <canvas class="dither" data-src="__BASE__images/profile.png" data-pixel="3" data-lamp role="img" aria-label="Portrait of Sanjay J"></canvas>
       </div>
       <div class="profile-text">
+        <p class="profile-kicker"><span class="dot" aria-hidden="true"></span>Backend &amp; systems · Go, TypeScript, Python, C</p>
         <h1 class="glitch" data-text="Hi, I'm Sanjay" data-glitch-loop>Hi, I'm Sanjay</h1>
         <p>
           A computer science engineer who learns by building the thing itself: databases from the
-          disk up, small developer tools, and the occasional game. Away from the keyboard I make
-          3D art and play chess. Have a look around.
+          disk up, consensus algorithms, small developer tools, and the occasional game. Away from
+          the keyboard I make 3D art and play chess.
         </p>
       </div>
+      <dl class="stats">
+        <div><dt>Projects</dt><dd id="stat-count">00</dd></div>
+        <div><dt>Building since</dt><dd id="stat-since">----</dd></div>
+        <div><dt>Latest</dt><dd id="stat-latest">-</dd></div>
+      </dl>
     </div>
   </section>
 
   <section class="projects" id="projects">
-    <h2 class="projects-head">Projects <span id="project-count"></span></h2>
+    <div class="projects-head">
+      <h2>Projects</h2>
+      <div class="filters" role="group" aria-label="Filter projects">
+        <button type="button" class="filter" data-filter="all" aria-pressed="true">All <i></i></button>
+        <button type="button" class="filter" data-filter="systems" aria-pressed="false">Systems <i></i></button>
+        <button type="button" class="filter" data-filter="web" aria-pressed="false">Web <i></i></button>
+        <button type="button" class="filter" data-filter="games" aria-pressed="false">Games <i></i></button>
+      </div>
+    </div>
     <div class="cards" id="work-grid"></div>
+  </section>
+
+  <section class="projects proposed" id="proposed">
+    <div class="projects-head">
+      <h2>From GitHub</h2>
+      <p class="proposed-note">Drafts from recent repositories. Not on the site yet.</p>
+    </div>
+    <div class="cards" id="proposed-grid"></div>
   </section>
 
   <footer class="foot page-foot">

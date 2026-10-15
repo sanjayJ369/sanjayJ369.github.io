@@ -1,0 +1,65 @@
+[
+  {
+    "slug": "raft-consensus",
+    "title": "Raft Consensus",
+    "description": "The Raft consensus algorithm in Go, with a raylib visualiser that animates elections and log replication between nodes.",
+    "date": "2026-02-10",
+    "tags": ["golang", "raft", "distributed-systems", "raylib"],
+    "repo": "https://github.com/sanjayJ369/raft-consensus",
+    "body": "## What it is\n\nAn implementation of the Raft consensus algorithm in Go. Each node moves between follower, candidate and leader states, runs elections on randomised timers, and replicates its log with AppendEntries. A small key-value store sits on top as the replicated state machine.\n\n## The visualiser\n\nTransport, timers and logging are interfaces, so the same core runs two ways: as a plain logged simulation, and inside a raylib window that draws every node and every in-flight message, which makes elections and heartbeats easy to watch.\n\n## Built with\n\n- Go\n- raylib-go for the visualisation\n- Table tests for the key-value state machine"
+  },
+  {
+    "slug": "fast-corpus-ingestion",
+    "title": "Fast Corpus Ingestion",
+    "description": "A hackathon RAG pipeline that ingests a mixed document corpus and answers 15 questions inside a 30-second budget.",
+    "date": "2026-08-31",
+    "tags": ["golang", "python", "rag", "arrow", "qdrant"],
+    "repo": "https://github.com/sanjayJ369/fast-ingester-comp",
+    "body": "## What it is\n\nA retrieval-augmented question answering pipeline built for a speed-focused hackathon: ingest a corpus of PDFs, Word files, HTML, spreadsheets and text, then answer 15 questions within 30 seconds.\n\n## How it works\n\n- **Go ingestor** parses every format concurrently and splits text into overlapping chunks with a worker pool.\n- **Apache Arrow** hands chunks to Python with no copying, over a file or a Unix socket stream.\n- **Python** embeds with BGE-small and indexes into Qdrant (FAISS optional), plus a BM25 index and k-means clusters.\n- **Queries** route through clusters, combine coarse vector search with BM25, rerank, and pass the top passages to an LLM for the answer."
+  },
+  {
+    "slug": "distributed-systems-labs",
+    "title": "Distributed Systems Labs",
+    "description": "Course labs in Go: MapReduce, a linearizable key-value server, and Raft, checked against a fault-injecting test suite.",
+    "date": "2025-04-15",
+    "tags": ["golang", "mapreduce", "raft", "kv-store"],
+    "repo": "https://github.com/sanjayJ369/dist-db",
+    "body": "## What it is\n\nMy work through the MIT 6.5840 distributed systems labs in Go.\n\n- **MapReduce**: a coordinator and workers that survive crashed and slow workers.\n- **Key-value server**: a linearizable server with a client that retries safely, checked with the Porcupine linearizability checker.\n- **Raft**: leader election and log replication, tested against dropped, delayed and reordered messages.\n\nThis is where the standalone Raft visualiser project started."
+  },
+  {
+    "slug": "sim8086",
+    "title": "sim8086",
+    "description": "An Intel 8086 instruction decoder in Go that turns machine code back into assembly by walking a trie of opcode bit patterns.",
+    "date": "2025-09-11",
+    "tags": ["golang", "x86", "decoder", "low-level"],
+    "repo": "https://github.com/sanjayJ369/sim8086",
+    "body": "## What it is\n\nA decoder for 8086 machine code. It reads a binary, converts it to a stream of bits, and matches each instruction's opcode against a trie of registered bit patterns, then prints the assembly back out.\n\n## Details\n\n- Handles the `mov` family: register to register, immediate to register, immediate to memory, and accumulator to and from memory.\n- New opcodes are added by registering a bit pattern and a parse function, so extending it is mostly data.\n- The trie has its own tests."
+  },
+  {
+    "slug": "c-from-scratch",
+    "title": "C From Scratch",
+    "description": "Small C projects: a Unix shell with a command parser and PATH lookup, and a custom malloc built on sbrk.",
+    "date": "2025-09-10",
+    "tags": ["c", "systems", "shell", "memory"],
+    "repo": "https://github.com/sanjayJ369/c-from-scratch",
+    "body": "## What it is\n\nA place for small programs that rebuild things C programmers usually take for granted.\n\n- **c-shell**: a shell with its own command parser that searches `PATH` to find and run programs.\n- **custom malloc**: an allocator that grows the heap with `sbrk` in fixed chunks and manages blocks with a free list of headers."
+  },
+  {
+    "slug": "retrospect",
+    "title": "Retrospect",
+    "description": "A Next.js app for daily tasks and longer challenges, with a calendar and analytics, that works offline and syncs when you sign in.",
+    "date": "2025-10-14",
+    "tags": ["typescript", "nextjs", "pwa", "indexeddb"],
+    "repo": "https://github.com/sanjayJ369/retrospect",
+    "body": "## What it is\n\nA productivity app for tracking daily tasks and multi-day challenges, with a calendar view and analytics.\n\n## How it works\n\n- Without an account, everything is stored locally in the browser with IndexedDB (Dexie).\n- After signing in, data syncs to a separate backend service, and analytics become available.\n- Built as an installable PWA with Next.js, React Query and Radix UI, deployed as static files."
+  },
+  {
+    "slug": "go-mini-projects",
+    "title": "Go Mini Projects",
+    "description": "A collection of small Go experiments: terminal Minesweeper, Go compiled to WebAssembly, a Maelstrom echo node, and a gRPC habit tracker.",
+    "date": "2025-11-09",
+    "tags": ["golang", "wasm", "grpc", "maelstrom"],
+    "repo": "https://github.com/sanjayJ369/go-minesweeper",
+    "body": "## What it is\n\nSmall Go projects, each exploring one idea.\n\n- **Minesweeper**: the classic game with its own game-state handling.\n- **go-wasm**: Go compiled to WebAssembly and driven from a web page.\n- **Maelstrom echo server**: a first node for Jepsen's Maelstrom distributed systems workbench.\n- **habit-grpc**: a habit tracker service defined with gRPC."
+  }
+]

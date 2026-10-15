@@ -2,6 +2,8 @@
   "use strict";
 
   const PROJECTS = window.__PROJECTS__ || [];
+  const SITE = PROJECTS.filter((p) => !p.proposed);
+  const PROPOSED = PROJECTS.filter((p) => p.proposed);
   const root = document.documentElement;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
@@ -18,23 +20,35 @@
      Palettes: each drives both the dither and the page colours.
      ------------------------------------------------------------------ */
   const PALETTES = [
-    { id: "wired", colours: ["#0b0710", "#2a0d1c", "#5a1030", "#e0284f", "#ff8fb1", "#efe4e1", "#6fd3ff", "#3a2a5e"] },
-    { id: "navi", colours: ["#05070d", "#10224a", "#2e5fd6", "#7ad7ff", "#c9b8ff", "#eef0ff", "#ff4f9a", "#1a1030"] },
-    { id: "phosphor", colours: ["#050a06", "#0c2a14", "#17602a", "#39ff6a", "#b8ffbf", "#ffb84a", "#5a3a10", "#d8ffd9"] },
-    { id: "copland", colours: ["#0e0a05", "#2e1d08", "#7a3e0c", "#ff9a1f", "#ffd27a", "#fff1d6", "#8fd0ff", "#3b4a6b"] },
+    { id: "wired",
+      dark: ["#0b0710", "#2a0d1c", "#5a1030", "#e0284f", "#ff8fb1", "#efe4e1", "#6fd3ff", "#3a2a5e"],
+      light: ["#f4eeea", "#e6d5d2", "#d3a9b6", "#d0193f", "#ff8fb1", "#1c1020", "#2a9fd6", "#6b5a8e"] },
+    { id: "navi",
+      dark: ["#05070d", "#10224a", "#2e5fd6", "#7ad7ff", "#c9b8ff", "#eef0ff", "#ff4f9a", "#1a1030"],
+      light: ["#eef1f8", "#d5ddf0", "#9fb3e6", "#2e5fd6", "#7ad7ff", "#0e1430", "#e23d84", "#6b5aa8"] },
+    { id: "phosphor",
+      dark: ["#050a06", "#0c2a14", "#17602a", "#39ff6a", "#b8ffbf", "#ffb84a", "#5a3a10", "#d8ffd9"],
+      light: ["#eef5ec", "#d3e5d1", "#8fc49a", "#178a3a", "#59d27a", "#c27a12", "#0d1f12", "#a3d6a9"] },
+    { id: "copland",
+      dark: ["#0e0a05", "#2e1d08", "#7a3e0c", "#ff9a1f", "#ffd27a", "#fff1d6", "#8fd0ff", "#3b4a6b"],
+      light: ["#f8f1e4", "#ecdcc0", "#d9b07a", "#d06a0c", "#ffb44a", "#2a1d0c", "#3d84c6", "#8a7a5a"] },
   ];
+  const isLight = () => root.dataset.theme === "light";
   let paletteIndex = Math.max(0, PALETTES.findIndex((p) => p.id === store.get("v2-dither")));
   let paletteRGB = [];
 
   function applyPalette() {
     const p = PALETTES[paletteIndex];
+    const colours = isLight() ? p.light : p.dark;
     root.dataset.palette = p.id;
-    paletteRGB = p.colours.map((hex) => {
+    paletteRGB = colours.map((hex) => {
       const n = parseInt(hex.slice(1), 16);
       return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
     });
-    $("#palette-swatch").innerHTML = [3, 6, 4, 2].map((i) => `<i style="background:${p.colours[i]}"></i>`).join("");
-    Dither.all.forEach((d) => (d.dirty = true));
+    $("#palette-swatch").innerHTML = [3, 6, 4, 2].map((i) => `<i style="background:${colours[i]}"></i>`).join("");
+    const themeBtn = $("#theme-btn");
+    if (themeBtn) themeBtn.setAttribute("aria-label", isLight() ? "Switch to dark mode" : "Switch to light mode");
+    Dither.all.forEach((d) => (d.gen ? d.sample() : (d.dirty = true)));
   }
 
   /* ------------------------------------------------------------------
@@ -57,6 +71,30 @@
     return Float32Array.from(m.flat().map((v) => (v + 0.5) / 64 - 0.5));
   })();
 
+  // A seeded interference pattern: soft bands bent around a few wells.
+  function pattern(w, h, seed, light) {
+    let n = 0;
+    for (const c of seed) n = (n * 31 + c.charCodeAt(0)) >>> 0;
+    const rnd = () => ((n = (n * 1664525 + 1013904223) >>> 0) / 4294967296);
+    const f1 = 4 + rnd() * 8, f2 = 3 + rnd() * 9, rot = rnd() * Math.PI;
+    const wells = Array.from({ length: 3 }, () => [rnd(), rnd(), 0.15 + rnd() * 0.3]);
+    const out = new Float32Array(w * h * 3);
+    const cr = Math.cos(rot), sr = Math.sin(rot);
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const u = x / w, v = y / h;
+        let bend = 0;
+        for (const [wx, wy, r] of wells) bend += r / (0.05 + Math.hypot(u - wx, (v - wy) * (h / w)));
+        const a = (u * cr - v * sr) * f1 + bend * 0.6, b = (u * sr + v * cr) * f2;
+        const val = 0.5 + 0.35 * Math.sin(a * Math.PI) * Math.cos(b * 0.7) + 0.15 * Math.sin(bend * 2);
+        // Keep to a narrow band of tones so the pattern stays calm: dark tones on
+        // a dark page, pale tones on a light one.
+        const k = (y * w + x) * 3, l = light ? 150 + clamp(val) * 105 : 25 + clamp(val) * 120;
+        out[k] = l; out[k + 1] = l * 0.85; out[k + 2] = l * 0.95;
+      }
+    return out;
+  }
+
   class Dither {
     static all = new Set();
     static pointer = { x: -1e4, y: -1e4 };
@@ -73,6 +111,13 @@
       Dither.io.observe(canvas);
       new ResizeObserver(() => this.sample()).observe(canvas);
       if (canvas.dataset.src) this.load(canvas.dataset.src);
+      // Projects without a screenshot get a generated pattern instead.
+      if (canvas.dataset.gen) {
+        this.gen = canvas.dataset.gen;
+        this.progress = reduced ? 1 : 0;
+        this.start = -1;
+        this.sample();
+      }
     }
 
     load(src, onDeveloped) {
@@ -93,13 +138,20 @@
 
     sample() {
       const { canvas, img } = this;
-      if (!img) return;
+      if (!img && !this.gen) return;
       const cw = canvas.clientWidth, ch = canvas.clientHeight;
       if (!cw || !ch) return;
       const w = (this.w = Math.max(8, Math.ceil(cw / this.pixel)));
       const h = (this.h = Math.max(8, Math.ceil(ch / this.pixel)));
       canvas.width = w;
       canvas.height = h;
+      if (this.gen) {
+        this.src32 = pattern(w, h, this.gen, isLight());
+        this.out = this.ctx.createImageData(w, h);
+        this.out32 = new Uint32Array(this.out.data.buffer);
+        this.dirty = true;
+        return;
+      }
       const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
       const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
       this.ctx.imageSmoothingQuality = "high";
@@ -130,9 +182,10 @@
       const packed = pal.map(([r, g, b]) => ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0);
       const lit = this.lamp && this.light.on > 0.01;
       const lx = this.light.x * w, ly = this.light.y * h, rad = Math.max(w, h) * 0.42;
+      const from = isLight() ? 230 : -230;
       for (let y = 0; y < h; y++) {
         const p = this.progress >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(this.progress * 1.4 - (y / h) * 0.4));
-        const bias = -230 * (1 - p);
+        const bias = from * (1 - p);
         const by = (y & 7) << 3;
         for (let x = 0; x < w; x++) {
           const j = (y * w + x) * 3;
@@ -158,6 +211,7 @@
 
     tick(now) {
       if (!this.visible || !this.src32) return;
+      if (this.gen && !this.out32) return;
       if (this.progress < 1) {
         if (this.start < 0) this.start = now;
         this.progress = Math.min(1, (now - this.start) / 1600);
@@ -183,6 +237,65 @@
   Dither.io = new IntersectionObserver((entries) => {
     for (const e of entries) for (const d of Dither.all) if (d.canvas === e.target) d.visible = e.isIntersecting;
   }, { rootMargin: "120px 0px" });
+
+  /* ------------------------------------------------------------------
+     A slow, dithered plasma for the profile banner. It drifts on its own
+     and swells around the pointer.
+     ------------------------------------------------------------------ */
+  class Field {
+    constructor(canvas) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext("2d");
+      this.visible = true;
+      this.pointer = { x: 0.5, y: 0.5, on: 0 };
+      new IntersectionObserver(([e]) => (this.visible = e.isIntersecting)).observe(canvas);
+      new ResizeObserver(() => this.size()).observe(canvas);
+    }
+    size() {
+      const w = (this.w = Math.max(8, Math.ceil(this.canvas.clientWidth / 4)));
+      const h = (this.h = Math.max(8, Math.ceil(this.canvas.clientHeight / 4)));
+      this.canvas.width = w;
+      this.canvas.height = h;
+      this.img = this.ctx.createImageData(w, h);
+      this.out = new Uint32Array(this.img.data.buffer);
+    }
+    tick(now) {
+      if (!this.visible || !this.out) return;
+      const r = this.canvas.getBoundingClientRect();
+      const tx = (Dither.pointer.x - r.left) / r.width, ty = (Dither.pointer.y - r.top) / r.height;
+      const inside = tx >= 0 && tx <= 1 && ty >= 0 && ty <= 1 ? 1 : 0;
+      this.pointer.x = lerp(this.pointer.x, tx, 0.08);
+      this.pointer.y = lerp(this.pointer.y, ty, 0.08);
+      this.pointer.on = lerp(this.pointer.on, inside, 0.05);
+      const t = reduced ? 0 : now / 1000;
+      const { w, h, out } = this, pal = paletteRGB, pn = pal.length;
+      const packed = pal.map(([r2, g, b]) => ((255 << 24) | (b << 16) | (g << 8) | r2) >>> 0);
+      // Ramp through the palette's mid-tones so the field stays quiet behind text.
+      const ramp = [pal[0], pal[1], pal[2], pal[7]];
+      const px = this.pointer.x * w, py = this.pointer.y * h;
+      for (let y = 0; y < h; y++) {
+        const by = (y & 7) << 3;
+        for (let x = 0; x < w; x++) {
+          const u = x / w, v = y / h;
+          let val = Math.sin(u * 7 + t * 0.35) + Math.sin(v * 5 - t * 0.27) + Math.sin((u + v) * 5 + t * 0.2) + Math.sin(Math.hypot(u - 0.5, v * 0.35) * 9 - t * 0.4);
+          val = val / 8 + 0.5;
+          const d = Math.hypot(x - px, (y - py) * 2) / (w * 0.18);
+          val += this.pointer.on * 0.35 * Math.max(0, 1 - d * d);
+          const f = clamp(val) * (ramp.length - 1), i = Math.min(ramp.length - 2, f | 0), k = f - i;
+          const a = ramp[i], b = ramp[i + 1], add = BAYER[by + (x & 7)] * 70;
+          const rr = a[0] + (b[0] - a[0]) * k + add, gg = a[1] + (b[1] - a[1]) * k + add, bb = a[2] + (b[2] - a[2]) * k + add;
+          let best = 0, bestD = Infinity;
+          for (let c = 0; c < pn; c++) {
+            const q = pal[c];
+            const dd = (rr - q[0]) ** 2 * 0.3 + (gg - q[1]) ** 2 * 0.59 + (bb - q[2]) ** 2 * 0.11;
+            if (dd < bestD) { bestD = dd; best = c; }
+          }
+          out[y * w + x] = packed[best];
+        }
+      }
+      this.ctx.putImageData(this.img, 0, 0);
+    }
+  }
 
   /* ------------------------------------------------------------------
      Smooth scrolling: wheel input eases toward a target. Touch, keys and
@@ -264,7 +377,7 @@
      Content
      ------------------------------------------------------------------ */
   const workList = $("#work-list"), workGrid = $("#work-grid");
-  if (workList) workList.innerHTML = PROJECTS.map((p, i) => `
+  if (workList) workList.innerHTML = SITE.map((p, i) => `
     <li class="reveal" style="--delay:${(i % 5) * 0.05}s">
       <button type="button" class="work-row" data-slug="${p.slug}">
         <span class="work-name"><span data-scramble>${p.title}</span></span>
@@ -274,25 +387,78 @@
     </li>`).join("");
 
   // Card grid (classic layout).
-  if (workGrid) {
-    $("#project-count").textContent = String(PROJECTS.length).padStart(2, "0");
-    workGrid.innerHTML = PROJECTS.map((p, i) => `
-      <article class="card reveal" style="--delay:${(i % 3) * 0.08}s">
-        ${p.image ? `<button type="button" class="card-media" data-slug="${p.slug}" aria-label="Open ${p.title}">
-          <canvas class="dither" data-src="${p.image}" data-pixel="2" aria-hidden="true"></canvas>
-          <img src="${p.image}" alt="" loading="lazy">
-        </button>` : ""}
-        <div class="card-body">
-          <h3 class="card-title">${p.title}</h3>
-          <ul class="card-tags">${p.tags.slice(0, 4).map((t) => `<li>${t}</li>`).join("")}</ul>
-          <p class="card-desc">${p.description}</p>
-          <div class="card-actions">
+  const CATEGORIES = [
+    ["systems", ["golang", "database", "btree", "raft", "c", "csharp", "x86", "distributed-systems", "mapreduce", "cli", "rag"]],
+    ["games", ["game", "game-development", "godot", "arcade"]],
+    ["web", ["javascript", "typescript", "react", "nextjs", "html", "css", "web-development"]],
+  ];
+  const category = (p) => (CATEGORIES.find(([, tags]) => p.tags.some((t) => tags.includes(t))) || ["other"])[0];
+  const LANG = { golang: "Go", typescript: "TypeScript", javascript: "JavaScript", csharp: "C#", c: "C", godot: "Godot", python: "Python" };
+  const lang = (p) => LANG[p.tags.find((t) => LANG[t])] || p.tags[0];
+
+  const card = (p, i, extra = "") => `
+    <article class="card reveal ${extra}" data-cat="${category(p)}" style="--delay:${(i % 3) * 0.08}s">
+      <div class="card-media">
+        ${p.image
+          ? `<canvas class="dither" data-src="${p.image}" data-pixel="2" aria-hidden="true"></canvas><img src="${p.image}" alt="" loading="lazy">`
+          : `<canvas class="dither" data-gen="${p.slug}" data-pixel="3" aria-hidden="true"></canvas>`}
+        ${p.proposed ? `<span class="card-badge">Proposed</span>` : ""}
+      </div>
+      <div class="card-body">
+        <p class="card-meta">${p.date.slice(0, 4)} · ${lang(p)}</p>
+        <h3 class="card-title"><button type="button" class="card-link" data-slug="${p.slug}"><span data-scramble>${p.title}</span></button></h3>
+        <p class="card-desc">${p.description}</p>
+        <div class="card-foot">
+          <span class="card-tags">${p.tags.filter((t) => LANG[t] !== lang(p)).slice(0, 3).join(" / ")}</span>
+          <span class="card-links">
             ${p.demo ? `<a href="${p.demo}" target="_blank" rel="noopener noreferrer">Live ↗</a>` : ""}
             ${p.repo ? `<a href="${p.repo}" target="_blank" rel="noopener noreferrer">Code ↗</a>` : ""}
-            <button type="button" class="card-open" data-slug="${p.slug}"><span data-scramble>Read more</span> →</button>
-          </div>
+          </span>
         </div>
-      </article>`).join("");
+      </div>
+    </article>`;
+
+  if (workGrid) {
+    workGrid.innerHTML = SITE.map((p, i) => card(p, i, i === 0 ? "featured" : "")).join("");
+    const proposedGrid = $("#proposed-grid");
+    if (proposedGrid) proposedGrid.innerHTML = PROPOSED.map((p, i) => card(p, i)).join("");
+    const counts = { all: SITE.length };
+    SITE.forEach((p) => (counts[category(p)] = (counts[category(p)] || 0) + 1));
+    $$(".filter").forEach((b) => {
+      const n = counts[b.dataset.filter] || 0;
+      b.querySelector("i").textContent = String(n).padStart(2, "0");
+      if (!n) b.hidden = true;
+    });
+
+    // Filter with a FLIP animation so cards glide into their new places.
+    $(".filters")?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter");
+      if (!btn) return;
+      $$(".filter").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      const cards = $$(".card", workGrid);
+      const before = new Map(cards.map((c) => [c, c.getBoundingClientRect()]));
+      const want = btn.dataset.filter;
+      cards.forEach((c) => (c.hidden = want !== "all" && c.dataset.cat !== want));
+      workGrid.classList.toggle("filtered", want !== "all");
+      if (reduced) return;
+      cards.forEach((c) => {
+        if (c.hidden) return;
+        const a = before.get(c), b = c.getBoundingClientRect();
+        if (!a.width) {
+          c.animate([{ opacity: 0, transform: "scale(0.96)" }, { opacity: 1, transform: "none" }], { duration: 500, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+          return;
+        }
+        c.animate([{ transform: `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`, transformOrigin: "0 0" }, { transform: "none", transformOrigin: "0 0" }],
+          { duration: 700, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+      });
+    });
+  }
+
+  // Profile stats (classic layout).
+  if ($("#stat-count")) {
+    $("#stat-count").textContent = String(SITE.length).padStart(2, "0");
+    $("#stat-since").textContent = SITE.reduce((m, p) => (p.date < m ? p.date : m), "9999").slice(0, 4);
+    $("#stat-latest").textContent = SITE[0].title;
   }
 
   // Scrolling banner (classic layout).
@@ -312,12 +478,23 @@
   // Preview canvases for the work list.
   const peek = $("#peek"), peekFrame = $("#peek-frame");
   if (finePointer && workList) {
-    peekFrame.innerHTML = PROJECTS.filter((p) => p.image)
+    peekFrame.innerHTML = SITE.filter((p) => p.image)
       .map((p) => `<canvas class="dither" data-src="${p.image}" data-pixel="2" data-slug="${p.slug}"></canvas>`).join("");
   }
 
   applyPalette();
-  $$("canvas.dither[data-src]").forEach((c) => new Dither(c));
+  $$("canvas.dither[data-src], canvas.dither[data-gen]").forEach((c) => new Dither(c));
+  const field = $("#field") ? new Field($("#field")) : null;
+
+  // Light and dark. The host page may also set data-theme; follow it either way.
+  $("#theme-btn")?.addEventListener("click", () => {
+    const next = isLight() ? "dark" : "light";
+    root.classList.add("theme-shift");
+    root.dataset.theme = next;
+    store.set("v2-theme", next);
+    setTimeout(() => root.classList.remove("theme-shift"), 700);
+  });
+  new MutationObserver(applyPalette).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
   const plateDither = new Dither($("#entry-canvas"));
 
   $("#palette-btn").addEventListener("click", () => {
@@ -340,7 +517,8 @@
     const i = PROJECTS.findIndex((p) => p.slug === slug);
     const p = PROJECTS[i];
     if (!p) return false;
-    const next = PROJECTS[(i + 1) % PROJECTS.length];
+    const group = p.proposed ? PROPOSED : SITE;
+    const next = group[(group.indexOf(p) + 1) % group.length];
     const title = $("#entry-title");
     title.textContent = title.dataset.text = p.title;
     $("#entry-lede").textContent = p.description;
@@ -400,6 +578,8 @@
   }
 
   document.addEventListener("click", (e) => {
+    const cardEl = e.target.closest(".card");
+    if (cardEl && !e.target.closest("a, button")) { cardEl.querySelector(".card-link")?.click(); return; }
     const trigger = e.target.closest("button[data-slug]");
     if (trigger) open(trigger.dataset.slug);
     else if (e.target.closest("[data-close]")) close();
@@ -522,6 +702,7 @@
     }
 
     for (const d of Dither.all) d.tick(now);
+    if (field) field.tick(now);
   }
   requestAnimationFrame(frame);
 

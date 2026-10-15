@@ -6,7 +6,7 @@
 <style>
 /*__STYLE__*/
 </style>
-<script>document.documentElement.classList.add("js");</script>
+<script>(function(d){d.classList.add("js");if(d.dataset.theme)return;var t=null;try{t=localStorage.getItem("v2-theme")}catch(e){}d.dataset.theme=t||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark")})(document.documentElement);</script>
 
 <a class="skip" href="#main">Skip to content</a>
 
@@ -17,6 +17,7 @@
     <a href="#about" data-scramble>About</a>
     <a href="#contact" data-scramble>Contact</a>
   </nav>
+  <button type="button" class="swatch theme-toggle" id="theme-btn" aria-label="Switch theme"><svg viewBox="0 0 8 8" width="14" height="14" aria-hidden="true" shape-rendering="crispEdges"><path class="sun" d="M3 0h2v1H3zM3 7h2v1H3zM0 3h1v2H0zM7 3h1v2H7zM1 1h1v1H1zM6 1h1v1H6zM1 6h1v1H1zM6 6h1v1H6zM2 2h4v4H2z"/><path class="moon" d="M3 1h3v1H3zM2 2h2v1H2zM1 3h2v2H1zM2 5h2v1H2zM3 6h3v1H3zM6 5h1v1H6z"/></svg></button>
   <button type="button" class="swatch" id="palette-btn" aria-label="Change colours"><span id="palette-swatch" aria-hidden="true"></span></button>
 </header>
 

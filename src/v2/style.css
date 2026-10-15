@@ -19,6 +19,16 @@
 :root[data-palette="navi"] { --void: #05070d; --raise: #0c1226; --bone: #eef0ff; --ash: #7f88a8; --line: rgb(127 136 168 / 0.2); --signal: #5b86ff; }
 :root[data-palette="phosphor"] { --void: #050a06; --raise: #0b170e; --bone: #d8ffd9; --ash: #6e9172; --line: rgb(110 145 114 / 0.2); --signal: #39ff6a; }
 :root[data-palette="copland"] { --void: #0e0a05; --raise: #1c140a; --bone: #fff1d6; --ash: #9a8a6f; --line: rgb(154 138 111 / 0.2); --signal: #ff9a1f; }
+/* Light mode: same palettes printed on paper. */
+:root[data-theme="light"] { --void: #f4eeea; --raise: #ebe1dd; --bone: #1c1020; --ash: #6f6070; --line: rgb(28 16 32 / 0.14); --signal: #d0193f; color-scheme: light; }
+:root[data-theme="light"][data-palette="navi"] { --void: #eef1f8; --raise: #e1e6f3; --bone: #0e1430; --ash: #5d6684; --line: rgb(14 20 48 / 0.14); --signal: #2e5fd6; }
+:root[data-theme="light"][data-palette="phosphor"] { --void: #eef5ec; --raise: #e0ecdd; --bone: #0d1f12; --ash: #557259; --line: rgb(13 31 18 / 0.15); --signal: #178a3a; }
+:root[data-theme="light"][data-palette="copland"] { --void: #f8f1e4; --raise: #efe3cd; --bone: #2a1d0c; --ash: #7a6a50; --line: rgb(42 29 12 / 0.15); --signal: #c45f08; }
+html.theme-shift body, html.theme-shift body * { transition: background-color 0.6s var(--ease), color 0.6s var(--ease), border-color 0.6s var(--ease) !important; }
+.theme-toggle svg { fill: currentColor; }
+.theme-toggle .moon, [data-theme="light"] .theme-toggle .sun { display: none; }
+[data-theme="light"] .theme-toggle .moon { display: inline; }
+[data-theme="light"] .crt { opacity: 0.3; }
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -92,7 +102,8 @@ img, video, canvas { display: block; max-width: 100%; }
 .bar-nav { display: flex; gap: clamp(1rem, 3vw, 2.5rem); }
 .bar-nav a { color: var(--ash); transition: color 0.3s var(--ease); }
 .bar-nav a:hover { color: var(--bone); }
-.swatch { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; }
+.swatch { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; color: var(--ash); transition: color 0.3s var(--ease); }
+.swatch:hover { color: var(--bone); }
 .swatch span { display: grid; grid-template-columns: repeat(2, 6px); grid-auto-rows: 6px; transition: transform 0.6s var(--ease); }
 .swatch:hover span { transform: rotate(90deg); }
 .swatch i { display: block; }
