@@ -2,7 +2,6 @@
   "use strict";
 
   const PROJECTS = window.__PROJECTS__ || [];
-  const FEATURED = ["go-dbms", "webhook-tester", "brick-breaker", "langapp"];
   const root = document.documentElement;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
@@ -10,20 +9,19 @@
   const finePointer = matchMedia("(pointer: fine)").matches;
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
-  const pad = (n, w = 2) => String(n).padStart(w, "0");
   const store = {
-    get(k, s = localStorage) { try { return s.getItem(k); } catch { return null; } },
-    set(k, v, s = localStorage) { try { s.setItem(k, v); } catch { /* storage unavailable */ } },
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
   };
 
   /* ------------------------------------------------------------------
-     Palettes. Each one drives both the dither and the page's tokens.
+     Palettes: each drives both the dither and the page colours.
      ------------------------------------------------------------------ */
   const PALETTES = [
-    { id: "wired", name: "WIRED", colours: ["#0b0710", "#2a0d1c", "#5a1030", "#e0284f", "#ff8fb1", "#efe4e1", "#6fd3ff", "#3a2a5e"] },
-    { id: "navi", name: "NAVI", colours: ["#05070d", "#10224a", "#2e5fd6", "#7ad7ff", "#c9b8ff", "#eef0ff", "#ff4f9a", "#1a1030"] },
-    { id: "phosphor", name: "PHOSPHOR", colours: ["#050a06", "#0c2a14", "#17602a", "#39ff6a", "#b8ffbf", "#ffb84a", "#5a3a10", "#d8ffd9"] },
-    { id: "copland", name: "COPLAND", colours: ["#0e0a05", "#2e1d08", "#7a3e0c", "#ff9a1f", "#ffd27a", "#fff1d6", "#8fd0ff", "#3b4a6b"] },
+    { id: "wired", colours: ["#0b0710", "#2a0d1c", "#5a1030", "#e0284f", "#ff8fb1", "#efe4e1", "#6fd3ff", "#3a2a5e"] },
+    { id: "navi", colours: ["#05070d", "#10224a", "#2e5fd6", "#7ad7ff", "#c9b8ff", "#eef0ff", "#ff4f9a", "#1a1030"] },
+    { id: "phosphor", colours: ["#050a06", "#0c2a14", "#17602a", "#39ff6a", "#b8ffbf", "#ffb84a", "#5a3a10", "#d8ffd9"] },
+    { id: "copland", colours: ["#0e0a05", "#2e1d08", "#7a3e0c", "#ff9a1f", "#ffd27a", "#fff1d6", "#8fd0ff", "#3b4a6b"] },
   ];
   let paletteIndex = Math.max(0, PALETTES.findIndex((p) => p.id === store.get("v2-dither")));
   let paletteRGB = [];
@@ -35,15 +33,14 @@
       const n = parseInt(hex.slice(1), 16);
       return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
     });
-    $("#palette-name").textContent = p.name;
-    $("#palette-swatch").innerHTML = p.colours.map((c) => `<i style="background:${c}"></i>`).join("");
+    $("#palette-swatch").innerHTML = [3, 6, 4, 2].map((i) => `<i style="background:${p.colours[i]}"></i>`).join("");
     Dither.all.forEach((d) => (d.dirty = true));
   }
 
   /* ------------------------------------------------------------------
      Colour ordered dithering: an 8x8 Bayer offset per channel, then the
-     nearest palette colour. Images "develop" in from black, can carry a
-     pointer-driven lamp, and glitch now and then.
+     nearest palette colour. Images develop in from dark; the portrait
+     also carries a pointer-driven lamp.
      ------------------------------------------------------------------ */
   const BAYER = (() => {
     let m = [[0]];
@@ -64,17 +61,13 @@
     static all = new Set();
     static pointer = { x: -1e4, y: -1e4 };
 
-    constructor(canvas, opts = {}) {
+    constructor(canvas) {
       this.canvas = canvas;
       this.ctx = canvas.getContext("2d", { willReadFrequently: true });
-      this.pixel = Number(canvas.dataset.pixel || opts.pixel || 2);
+      this.pixel = Number(canvas.dataset.pixel || 2);
       this.lamp = canvas.hasAttribute("data-lamp");
       this.visible = false;
-      this.progress = reduced ? 1 : 0;
-      this.start = -1;
       this.light = { x: 0.5, y: 0.4, on: 0 };
-      this.glitchUntil = 0;
-      this.nextGlitch = performance.now() + 6000 + Math.random() * 9000;
       this.dirty = true;
       Dither.all.add(this);
       Dither.io.observe(canvas);
@@ -82,11 +75,12 @@
       if (canvas.dataset.src) this.load(canvas.dataset.src);
     }
 
-    load(src, develop = true) {
+    load(src, onDeveloped) {
       this.src = src;
-      this.img = null;
-      this.progress = reduced || !develop ? 1 : 0;
+      this.src32 = null;
+      this.progress = reduced ? 1 : 0;
       this.start = -1;
+      this.onDeveloped = onDeveloped;
       const img = new Image();
       img.decoding = "async";
       img.onload = () => {
@@ -111,7 +105,7 @@
       this.ctx.imageSmoothingQuality = "high";
       this.ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
       const px = this.ctx.getImageData(0, 0, w, h).data;
-      // Stretch levels per channel so flat screenshots still read.
+      // Stretch levels so flat screenshots still read.
       let lo = 255, hi = 0;
       for (let i = 0; i < px.length; i += 4) {
         const l = (px[i] + px[i + 1] + px[i + 2]) / 3;
@@ -130,25 +124,19 @@
       this.dirty = true;
     }
 
-    render(now) {
+    render() {
       const { w, h, src32, out32 } = this;
-      if (!src32) return;
       const pal = paletteRGB, pn = pal.length;
       const packed = pal.map(([r, g, b]) => ((255 << 24) | (b << 16) | (g << 8) | r) >>> 0);
       const lit = this.lamp && this.light.on > 0.01;
       const lx = this.light.x * w, ly = this.light.y * h, rad = Math.max(w, h) * 0.42;
-      const glitching = now < this.glitchUntil;
-      const spread = 72;
       for (let y = 0; y < h; y++) {
         const p = this.progress >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(this.progress * 1.4 - (y / h) * 0.4));
         const bias = -230 * (1 - p);
-        // Horizontal tearing while glitching.
-        const shift = glitching && Math.random() < 0.12 ? ((Math.random() - 0.5) * w * 0.25) | 0 : 0;
         const by = (y & 7) << 3;
         for (let x = 0; x < w; x++) {
-          const sx = Math.min(w - 1, Math.max(0, x + shift));
-          const j = (y * w + sx) * 3;
-          let add = bias + BAYER[by + (x & 7)] * spread;
+          const j = (y * w + x) * 3;
+          let add = bias + BAYER[by + (x & 7)] * 64;
           if (lit) {
             const dx = x - lx, dy = y - ly;
             const d = Math.sqrt(dx * dx + dy * dy) / rad;
@@ -162,7 +150,7 @@
             const dd = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
             if (dd < bestD) { bestD = dd; best = c; }
           }
-          out32[y * w + x] = packed[glitching && Math.random() < 0.002 ? 3 : best];
+          out32[y * w + x] = packed[best];
         }
       }
       this.ctx.putImageData(this.out, 0, 0);
@@ -172,8 +160,9 @@
       if (!this.visible || !this.src32) return;
       if (this.progress < 1) {
         if (this.start < 0) this.start = now;
-        this.progress = Math.min(1, (now - this.start) / 1700);
+        this.progress = Math.min(1, (now - this.start) / 1600);
         this.dirty = true;
+        if (this.progress === 1 && this.onDeveloped) this.onDeveloped();
       }
       if (this.lamp && finePointer && !reduced) {
         const r = this.canvas.getBoundingClientRect();
@@ -185,21 +174,14 @@
           this.dirty = true;
         }
       }
-      if (!reduced && now > this.nextGlitch) {
-        this.glitchUntil = now + 160 + Math.random() * 200;
-        this.nextGlitch = now + 12000 + Math.random() * 14000;
-      }
-      if (now < this.glitchUntil + 20) this.dirty = true;
       if (this.dirty) {
         this.dirty = false;
-        this.render(now);
+        this.render();
       }
     }
   }
   Dither.io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      for (const d of Dither.all) if (d.canvas === e.target) d.visible = e.isIntersecting;
-    }
+    for (const e of entries) for (const d of Dither.all) if (d.canvas === e.target) d.visible = e.isIntersecting;
   }, { rootMargin: "120px 0px" });
 
   /* ------------------------------------------------------------------
@@ -212,28 +194,14 @@
     target: scrollY,
     current: scrollY,
     running: false,
-    velocity: 0,
-    max: () => document.documentElement.scrollHeight - innerHeight,
-    to(y, immediate = false) {
-      this.target = clamp(y, 0, this.max());
-      if (immediate || !this.enabled) {
-        this.current = this.target;
-        scrollTo(0, this.target);
-        return;
-      }
-      this.run();
-    },
-    run() {
+    to(y) {
+      this.target = clamp(y, 0, root.scrollHeight - innerHeight);
+      if (!this.enabled) { scrollTo({ top: this.target, behavior: reduced ? "auto" : "smooth" }); return; }
       if (this.running) return;
       this.running = true;
       const step = () => {
         this.current = lerp(this.current, this.target, 0.085);
-        this.velocity = this.target - this.current;
-        if (Math.abs(this.velocity) < 0.4) {
-          this.current = this.target;
-          this.velocity = 0;
-          this.running = false;
-        }
+        if (Math.abs(this.target - this.current) < 0.4) { this.current = this.target; this.running = false; }
         scrollTo(0, this.current);
         if (this.running) requestAnimationFrame(step);
       };
@@ -248,29 +216,32 @@
       const unit = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? innerHeight : 1;
       scroller.to(scroller.target + e.deltaY * unit);
     }, { passive: false });
-    addEventListener("scroll", () => {
-      if (!scroller.running) scroller.target = scroller.current = scrollY;
-    }, { passive: true });
   }
-  const scrollToEl = (el) => scroller.to(el.getBoundingClientRect().top + scrollY);
+  let lastY = scrollY;
+  const bar = $(".bar");
+  addEventListener("scroll", () => {
+    if (!scroller.running) scroller.target = scroller.current = scrollY;
+    // Header steps aside while reading down, returns on the way up.
+    const y = scrollY;
+    if (Math.abs(y - lastY) > 6) { bar.classList.toggle("hide", y > lastY && y > 200); lastY = y; }
+  }, { passive: true });
   document.addEventListener("click", (e) => {
     const a = e.target.closest('a[href^="#"]');
     if (!a) return;
-    const id = a.getAttribute("href").slice(1);
-    const el = id === "top" ? $("#top") : document.getElementById(id);
+    const el = document.getElementById(a.getAttribute("href").slice(1));
     if (!el) return;
     e.preventDefault();
-    scrollToEl(el);
+    scroller.to(el.id === "top" ? 0 : el.getBoundingClientRect().top + scrollY - 40);
   });
 
   /* ------------------------------------------------------------------
-     Text scramble
+     Text scramble on hover
      ------------------------------------------------------------------ */
   const GLYPHS = "アイウエオカキクケコサシスセソ01#%&/<>_=+*";
-  function scramble(el, text = el.dataset.final || el.textContent) {
-    if (reduced) { el.textContent = text; return; }
-    el.dataset.final = text;
-    const start = performance.now(), dur = 380 + text.length * 18;
+  function scramble(el) {
+    if (reduced) return;
+    const text = (el.dataset.final ||= el.textContent);
+    const start = performance.now(), dur = 300 + text.length * 30;
     cancelAnimationFrame(el._scr);
     const frame = (t) => {
       const p = clamp((t - start) / dur);
@@ -283,60 +254,39 @@
     el._scr = requestAnimationFrame(frame);
   }
   document.addEventListener("pointerover", (e) => {
-    const host = e.target.closest("[data-scramble], a, button");
+    const host = e.target.closest("a, button");
     if (!host || host.contains(e.relatedTarget)) return;
     const el = host.matches("[data-scramble]") ? host : host.querySelector("[data-scramble]");
-    // Only scramble leaf text, never elements holding other markup.
     if (el && el.children.length === 0) scramble(el);
   });
 
   /* ------------------------------------------------------------------
-     Build content from data
+     Content
      ------------------------------------------------------------------ */
-  const year = (p) => p.date.slice(0, 4);
-  const pid = (i) => pad(1000 + (PROJECTS.length - i) * 37, 4);
+  $("#work-list").innerHTML = PROJECTS.map((p, i) => `
+    <li class="reveal" style="--delay:${(i % 5) * 0.05}s">
+      <button type="button" class="work-row" data-slug="${p.slug}">
+        <span class="work-name"><span data-scramble>${p.title}</span></span>
+        <span class="work-desc">${p.description}</span>
+        <span class="work-year">${p.date.slice(0, 4)}</span>
+      </button>
+    </li>`).join("");
 
-  $("#proc-count").textContent = `${pad(PROJECTS.length)} RUNNING`;
-
-  $("#proc-rows").innerHTML = PROJECTS.map((p, i) => `
-    <button type="button" class="proc-row reveal" role="row" data-slug="${p.slug}" data-index="${i}" data-cursor="open" style="--delay:${i * 0.05}s">
-      <span class="proc-pid" role="cell">${pid(i)}</span>
-      <span class="proc-name" role="cell"><span data-scramble>${p.title}</span></span>
-      <span class="proc-desc" role="cell">${p.description}</span>
-      <span class="proc-year" role="cell">${year(p)}</span>
-    </button>`).join("");
-
-  const featured = FEATURED.map((s) => PROJECTS.find((p) => p.slug === s)).filter(Boolean);
-  $("#signal-track").insertAdjacentHTML("beforeend", featured.map((p, i) => `
-    <button type="button" class="window signal-card" data-slug="${p.slug}" data-cursor="read">
-      <span class="window-bar"><span>${pad(i + 1)} — ${p.slug}</span></span>
-      <span class="window-body" style="display:block"><span style="display:block"><canvas class="dither" data-src="${p.image}" data-pixel="2" role="img" aria-label="${p.title}"></canvas></span></span>
-      <span class="signal-meta"><span class="signal-title">${p.title}</span><span class="signal-desc">${p.description}</span></span>
-    </button>`).join(""));
-
-  const words = [
-    ["DATABASE INTERNALS", "記憶"], ["B-TREES", ""], ["GO", "接続"], ["TYPESCRIPT", ""], ["REACT", ""],
-    ["GODOT", "遊戯"], ["C#", ""], ["DOCKER", ""], ["TEST-DRIVEN", "検証"], ["CI/CD", ""], ["3D ART", "造形"], ["CHESS", "将棋"],
-  ];
-  const tickerRow = words.map(([w, j]) => `<span>${w}${j ? ` <span lang="ja">${j}</span>` : ""}</span><span aria-hidden="true">·</span>`).join("");
-  $("#ticker").innerHTML = tickerRow + tickerRow;
-
-  /* Peek window (cursor-follow preview) */
-  const peek = $("#peek"), peekStrip = $("#peek-strip"), peekName = $("#peek-name");
-  if (finePointer) {
-    peekStrip.innerHTML = PROJECTS.map((p) => (p.image ? `<canvas class="dither" data-src="${p.image}" data-pixel="2" data-slug="${p.slug}"></canvas>` : "")).join("");
-  }
-
-  /* Scrub text */
   const scrub = $("#scrub");
   scrub.setAttribute("aria-label", scrub.textContent);
   scrub.innerHTML = scrub.textContent.split(" ").map((w) => `<span class="w" aria-hidden="true">${w} </span>`).join("");
   const scrubWords = $$(".w", scrub);
 
-  /* Dithered canvases */
+  // Preview canvases for the work list.
+  const peek = $("#peek"), peekFrame = $("#peek-frame");
+  if (finePointer) {
+    peekFrame.innerHTML = PROJECTS.filter((p) => p.image)
+      .map((p) => `<canvas class="dither" data-src="${p.image}" data-pixel="2" data-slug="${p.slug}"></canvas>`).join("");
+  }
+
   applyPalette();
   $$("canvas.dither[data-src]").forEach((c) => new Dither(c));
-  const plate = new Dither($("#entry-plate"));
+  const plateDither = new Dither($("#entry-canvas"));
 
   $("#palette-btn").addEventListener("click", () => {
     paletteIndex = (paletteIndex + 1) % PALETTES.length;
@@ -345,51 +295,54 @@
   });
 
   /* ------------------------------------------------------------------
-     Entry window
+     Project window
      ------------------------------------------------------------------ */
-  const entry = $("#entry");
+  const entry = $("#entry"), plate = $("#entry-plate"), plateImg = $("#entry-img");
   let lastFocus = null;
 
-  function fillEntry(slug) {
+  function setHash(hash) {
+    try { history.replaceState(null, "", hash || location.pathname + location.search); } catch { /* sandboxed */ }
+  }
+
+  function fill(slug) {
     const i = PROJECTS.findIndex((p) => p.slug === slug);
     const p = PROJECTS[i];
     if (!p) return false;
     const next = PROJECTS[(i + 1) % PROJECTS.length];
-    $("#entry-file").textContent = `${slug}.md — pid ${pid(i)}`;
-    $("#entry-pid").textContent = `PROCESS ${pad(i + 1)} OF ${pad(PROJECTS.length)} · PID ${pid(i)}`;
     const title = $("#entry-title");
-    title.textContent = p.title;
-    title.dataset.text = p.title;
+    title.textContent = title.dataset.text = p.title;
     $("#entry-lede").textContent = p.description;
     const [y, m, d] = p.date.split("-");
+    const month = new Date(Date.UTC(+y, +m - 1, +d)).toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
     $("#entry-meta").innerHTML = `
-      <div><dt>LOGGED</dt><dd>${y}.${m}.${d}</dd></div>
-      <div><dt>TAGS</dt><dd>${p.tags.join(", ")}</dd></div>
-      ${p.repo ? `<div><dt>SOURCE</dt><dd><a href="${p.repo}" target="_blank" rel="noopener noreferrer">repository ↗</a></dd></div>` : ""}
-      ${p.demo ? `<div><dt>LIVE</dt><dd><a href="${p.demo}" target="_blank" rel="noopener noreferrer">try it ↗</a></dd></div>` : ""}`;
-    const plateEl = $(".entry-plate");
-    plateEl.hidden = !p.image;
+      <div><dt>Date</dt><dd>${month} ${y}</dd></div>
+      <div><dt>Stack</dt><dd>${p.tags.slice(0, 4).join(", ")}</dd></div>
+      ${p.repo ? `<div><dt>Code</dt><dd><a href="${p.repo}" target="_blank" rel="noopener noreferrer">GitHub ↗</a></dd></div>` : ""}
+      ${p.demo ? `<div><dt>Live</dt><dd><a href="${p.demo}" target="_blank" rel="noopener noreferrer">Try it ↗</a></dd></div>` : ""}`;
+    plate.hidden = !p.image;
+    plate.classList.remove("clear");
     if (p.image) {
-      plate.canvas.setAttribute("aria-label", p.title);
-      plate.load(p.image);
+      plateImg.src = p.image;
+      plateImg.alt = p.title;
+      // Develop as a dither, then settle into the real image.
+      plateDither.load(p.image, () => plate.classList.add("clear"));
     }
     const body = $("#entry-body");
     body.innerHTML = p.html;
+    // The plate already shows the cover image; drop it from the write-up.
+    $$("img", body).forEach((img) => {
+      if (p.image && img.getAttribute("src") === p.image) (img.closest("p") || img).remove();
+      else { img.loading = "lazy"; img.alt ||= ""; }
+    });
     $$("a", body).forEach((a) => { a.target = "_blank"; a.rel = "noopener noreferrer"; });
-    $$("img", body).forEach((img) => { img.loading = "lazy"; img.alt = img.alt || ""; });
     $("#entry-next-title").textContent = `${next.title} →`;
     $("#entry-next").dataset.slug = next.slug;
     $("#entry-scroll").scrollTop = 0;
     return true;
   }
 
-  // Keep the address in sync so an entry can be linked to; no extra history entries.
-  function setHash(hash) {
-    try { history.replaceState(null, "", hash || location.pathname + location.search); } catch { /* sandboxed */ }
-  }
-
-  function openEntry(slug, push = true) {
-    if (!fillEntry(slug)) return;
+  function open(slug) {
+    if (!fill(slug)) return;
     if (entry.hidden) {
       lastFocus = document.activeElement;
       entry.hidden = false;
@@ -398,85 +351,60 @@
       requestAnimationFrame(() => requestAnimationFrame(() => entry.classList.add("open")));
       $(".entry-close").focus({ preventScroll: true });
     }
-    glitchOnce($("#entry-title"));
-    if (push) setHash(`#entry-${slug}`);
+    if (reduced) plate.classList.add("clear");
+    glitch($("#entry-title"));
+    setHash(`#${slug}`);
   }
 
-  function closeEntry(pop = false) {
+  function close() {
     if (entry.hidden) return;
     entry.classList.remove("open");
     scroller.locked = false;
     document.body.style.overflow = "";
     setTimeout(() => { if (!entry.classList.contains("open")) entry.hidden = true; }, reduced ? 0 : 650);
     $$("video", entry).forEach((v) => v.pause());
-    if (!pop && location.hash.startsWith("#entry-")) setHash("");
+    setHash("");
     lastFocus?.focus?.({ preventScroll: true });
   }
 
   document.addEventListener("click", (e) => {
-    const trigger = e.target.closest("[data-slug]:not(canvas)");
-    if (trigger) { openEntry(trigger.dataset.slug); return; }
-    if (e.target.closest("[data-close]")) closeEntry();
+    const trigger = e.target.closest("button[data-slug]");
+    if (trigger) open(trigger.dataset.slug);
+    else if (e.target.closest("[data-close]")) close();
   });
   addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeEntry();
+    if (e.key === "Escape") close();
     if (e.key === "Tab" && !entry.hidden) {
-      // Keep focus inside the open window.
-      const f = $$('button, a[href], video[controls], [tabindex]:not([tabindex="-1"])', entry).filter((el) => el.offsetParent);
-      if (!f.length) return;
+      const f = $$('button, a[href], video[controls]', entry).filter((el) => el.offsetParent);
       const first = f[0], last = f[f.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
   });
-  addEventListener("hashchange", () => {
-    const slug = location.hash.startsWith("#entry-") ? location.hash.slice(7) : null;
-    if (slug) openEntry(slug, false);
-    else closeEntry(true);
-  });
 
   /* ------------------------------------------------------------------
-     Glitch type
+     Glitch: on open, and now and then on the name.
      ------------------------------------------------------------------ */
-  function glitchOnce(el) {
+  function glitch(el) {
     if (reduced || !el) return;
     el.classList.remove("is-glitching");
     void el.offsetWidth;
     el.classList.add("is-glitching");
     setTimeout(() => el.classList.remove("is-glitching"), 460);
   }
+  const name = $(".hero h1");
+  setTimeout(() => glitch(name), 1100);
   if (!reduced) {
     (function loop() {
-      const visible = $$(".glitch").filter((el) => {
-        const r = el.getBoundingClientRect();
-        return r.bottom > 0 && r.top < innerHeight && el.offsetParent;
-      });
-      if (visible.length) glitchOnce(visible[(Math.random() * visible.length) | 0]);
-      setTimeout(loop, 7000 + Math.random() * 6000);
+      if (name.getBoundingClientRect().bottom > 0) glitch(name);
+      setTimeout(loop, 9000 + Math.random() * 7000);
     })();
   }
 
   /* ------------------------------------------------------------------
-     Layer indicator
-     ------------------------------------------------------------------ */
-  const layerNo = $("#layer-no"), layerName = $("#layer-name");
-  const layerIO = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const no = `LAYER:${e.target.dataset.layer}`;
-      if (layerNo.dataset.final === no) continue;
-      scramble(layerNo, no);
-      scramble(layerName, e.target.dataset.name);
-    }
-  }, { rootMargin: "-45% 0px -50% 0px" });
-  $$("[data-layer]").forEach((s) => layerIO.observe(s));
-
-  /* ------------------------------------------------------------------
-     Reveal: only for content that starts below the fold, so the first
-     frame is always complete.
+     Reveal content that starts below the fold
      ------------------------------------------------------------------ */
   if (!reduced) {
-    const candidates = $$(".reveal, .section-head, .facts > div, .links li, .scrub, .signal-head, .sign-off");
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
@@ -485,10 +413,9 @@
         io.unobserve(e.target);
       }
     }, { rootMargin: "0px 0px -6% 0px" });
-    candidates.forEach((el, i) => {
+    $$(".reveal, .section > .label, .facts > div, .links li, .scrub").forEach((el) => {
       if (el.getBoundingClientRect().top > innerHeight) {
         el.classList.add("pending");
-        if (!el.style.getPropertyValue("--delay")) el.style.setProperty("--delay", `${(i % 4) * 0.06}s`);
         io.observe(el);
       }
     });
@@ -497,160 +424,63 @@
   /* ------------------------------------------------------------------
      Clock
      ------------------------------------------------------------------ */
-  const fmtTime = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Kolkata" });
-  const fmtDate = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Kolkata" });
-  const tickClock = () => {
-    const now = new Date();
-    $("#clock").textContent = fmtTime.format(now);
-    $("#today").textContent = fmtDate.format(now).replaceAll("-", ".");
-  };
-  tickClock();
-  setInterval(tickClock, 1000);
+  const fmt = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
+  const tick = () => ($("#clock").textContent = fmt.format(new Date()));
+  tick();
+  setInterval(tick, 10000);
 
   /* ------------------------------------------------------------------
-     Cursor
+     Pointer: crosshair cursor and the work-list preview
      ------------------------------------------------------------------ */
-  const cursor = $("#cursor"), cursorLabel = $("#cursor-label");
-  let mouse = { x: -100, y: -100 }, cpos = { x: -100, y: -100 };
+  const cursor = $("#cursor");
+  let mouse = { x: -100, y: -100 }, cpos = { ...mouse }, ppos = { ...mouse }, peeking = false;
   addEventListener("pointermove", (e) => {
     mouse = { x: e.clientX, y: e.clientY };
     Dither.pointer = mouse;
-    const host = e.target.closest("[data-cursor]");
-    const label = host ? host.dataset.cursor : "";
-    if (cursorLabel.textContent !== label) cursorLabel.textContent = label;
+    cursor.classList.toggle("hover", !!e.target.closest("a, button"));
   }, { passive: true });
   if (finePointer && !reduced) root.classList.add("has-cursor");
 
-  /* ------------------------------------------------------------------
-     Frame loop: ticker, peek window, pinned gallery, scrub, dithers.
-     ------------------------------------------------------------------ */
-  const ticker = $("#ticker");
-  const signal = $("#signal"), track = $("#signal-track"), bar = $("#signal-bar");
-  const wide = matchMedia("(min-width: 821px)");
-  let tickX = 0, tickV = 0, tickSkew = 0, tickDir = 1;
-  let peekPos = { x: 0, y: 0 }, peekActive = -1, signalShown = 0;
-
-  const sizeSignal = () => {
-    signal.style.height = wide.matches && !reduced ? `${track.scrollWidth - innerWidth + innerHeight}px` : "";
-  };
-  new ResizeObserver(sizeSignal).observe(track);
-  wide.addEventListener("change", sizeSignal);
-
-  const rows = $$(".proc-row");
-  const peekCanvases = $$("canvas", peekStrip);
-  rows.forEach((row) => {
+  const peekCanvases = $$("canvas", peekFrame);
+  $$(".work-row").forEach((row) => {
     row.addEventListener("pointerenter", () => {
-      peekActive = Number(row.dataset.index);
       const slug = row.dataset.slug;
       peekCanvases.forEach((c) => c.classList.toggle("on", c.dataset.slug === slug));
-      peekName.textContent = `preview :: ${slug}.png`;
-      peek.classList.toggle("on", peekCanvases.some((c) => c.dataset.slug === slug));
+      peeking = peekCanvases.some((c) => c.dataset.slug === slug);
+      peek.classList.toggle("on", peeking);
     });
   });
-  $("#proc-rows").addEventListener("pointerleave", () => { peekActive = -1; peek.classList.remove("on"); });
+  $("#work-list").addEventListener("pointerleave", () => { peeking = false; peek.classList.remove("on"); });
 
+  /* ------------------------------------------------------------------
+     Frame loop
+     ------------------------------------------------------------------ */
   function frame(now) {
     requestAnimationFrame(frame);
-
-    // Cursor
     cpos.x = lerp(cpos.x, mouse.x, 0.35);
     cpos.y = lerp(cpos.y, mouse.y, 0.35);
     cursor.style.transform = `translate3d(${cpos.x}px, ${cpos.y}px, 0)`;
 
-    if (!reduced) {
-      // Ticker leans and speeds with scroll velocity.
-      const v = scroller.velocity || 0;
-      if (Math.abs(v) > 1) tickDir = Math.sign(v);
-      tickV = lerp(tickV, 0.6 * tickDir + v * 0.04, 0.08);
-      tickSkew = lerp(tickSkew, clamp(v * 0.08, -10, 10), 0.1);
-      const half = ticker.scrollWidth / 2;
-      tickX -= tickV;
-      if (tickX <= -half) tickX += half;
-      if (tickX > 0) tickX -= half;
-      ticker.style.transform = `translate3d(${tickX}px,0,0) skewX(${-tickSkew}deg)`;
-
-      // Peek follows the pointer with a little lag.
-      if (peekActive >= 0) {
-        peekPos.x = lerp(peekPos.x, mouse.x, 0.14);
-        peekPos.y = lerp(peekPos.y, mouse.y, 0.14);
-        peek.style.transform = `translate3d(${peekPos.x}px, ${peekPos.y}px, 0)`;
-      } else {
-        peekPos = { ...mouse };
-      }
-
-      // Pinned horizontal gallery.
-      if (wide.matches) {
-        const r = signal.getBoundingClientRect();
-        const p = clamp(-r.top / Math.max(1, r.height - innerHeight));
-        signalShown = lerp(signalShown, p, 0.12);
-        track.style.transform = `translate3d(${-signalShown * (track.scrollWidth - innerWidth)}px,0,0)`;
-        bar.style.transform = `scaleX(${signalShown})`;
-        $$(".signal-card .window-body > span", track).forEach((m, i, all) => {
-          const local = signalShown * (all.length - 1) - i;
-          m.style.transform = `translate3d(${local * -5}%,0,0)`;
-        });
-      } else {
-        track.style.transform = "";
-      }
+    if (peeking) {
+      ppos.x = lerp(ppos.x, mouse.x, 0.14);
+      ppos.y = lerp(ppos.y, mouse.y, 0.14);
+      peek.style.transform = `translate3d(${ppos.x}px, ${ppos.y}px, 0)`;
+    } else {
+      ppos = { ...mouse };
     }
 
-    // Scrub text
     const sr = scrub.getBoundingClientRect();
     if (sr.bottom > 0 && sr.top < innerHeight) {
       const p = reduced ? 1 : clamp((innerHeight * 0.85 - sr.top) / (sr.height + innerHeight * 0.3));
       const lit = Math.round(p * scrubWords.length * 1.1);
-      scrubWords.forEach((w, i) => {
-        w.classList.toggle("lit", i < lit);
-        w.classList.toggle("hot", i < lit && i >= lit - 3 && lit < scrubWords.length);
-      });
+      scrubWords.forEach((w, i) => w.classList.toggle("lit", i < lit));
     }
 
     for (const d of Dither.all) d.tick(now);
   }
   requestAnimationFrame(frame);
 
-  /* ------------------------------------------------------------------
-     Boot sequence
-     ------------------------------------------------------------------ */
-  const boot = $("#boot");
-  const seen = store.get("v2-seen", sessionStorage);
-  const startHash = location.hash;
-  const afterBoot = () => {
-    glitchOnce($(".hero h1"));
-    if (startHash.startsWith("#entry-")) openEntry(startHash.slice(7), false);
-  };
-  if (seen || reduced || startHash.startsWith("#entry-")) {
-    boot.classList.add("gone");
-    afterBoot();
-  } else {
-    store.set("v2-seen", "1", sessionStorage);
-    const lines = [
-      "SJ-OS 2.0 · WIRED NODE 0369",
-      "<span class=ok>[ OK ]</span> memory check .............. 640K",
-      `<span class=ok>[ OK ]</span> mount /projects ........... ${PROJECTS.length} entries`,
-      `<span class=ok>[ OK ]</span> calibrate dither .......... ${PALETTES[paletteIndex].colours.length} colours`,
-      "<span class=ok>[ OK ]</span> handshake ................. you",
-      "&gt; connecting to the wired_",
-    ];
-    const log = $("#boot-log"), fill = $("#boot-bar");
-    let i = 0, done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      fill.style.width = "100%";
-      setTimeout(() => boot.classList.add("off"), 160);
-      setTimeout(() => { boot.classList.add("gone"); afterBoot(); }, 1050);
-    };
-    const step = () => {
-      if (done) return;
-      log.innerHTML += (i ? "\n" : "") + lines[i];
-      i++;
-      fill.style.width = `${(i / lines.length) * 100}%`;
-      if (i < lines.length) setTimeout(step, 150 + Math.random() * 160);
-      else setTimeout(finish, 380);
-    };
-    step();
-    boot.addEventListener("click", finish);
-    addEventListener("keydown", finish, { once: true });
-  }
+  // Deep link straight to a project.
+  const start = location.hash.slice(1);
+  if (PROJECTS.some((p) => p.slug === start)) open(start);
 })();

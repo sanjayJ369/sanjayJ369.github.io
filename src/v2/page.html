@@ -1,4 +1,4 @@
-<title>Sanjay J — Wired Node</title>
+<title>Sanjay J</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6,157 +6,89 @@
 <style>
 /*__STYLE__*/
 </style>
+<script>document.documentElement.classList.add("js");</script>
 
-<script>(function(d){d.classList.add("js");try{if(sessionStorage.getItem("v2-seen"))d.classList.add("seen")}catch(e){}})(document.documentElement);</script>
 <a class="skip" href="#main">Skip to content</a>
 
-<!-- Boot sequence: first visit per session only. Click or any key skips it. -->
-<div class="boot" id="boot" aria-hidden="true">
-  <div class="boot-inner">
-    <pre class="boot-log" id="boot-log"></pre>
-    <div class="boot-bar"><span id="boot-bar"></span></div>
-  </div>
-</div>
-
-<header class="bar" id="bar">
-  <a class="bar-node" href="#top">
-    <i class="led" aria-hidden="true"></i>SJ//NODE-0369
-  </a>
-  <p class="bar-layer" aria-live="polite"><span id="layer-no">LAYER:01</span> <span id="layer-name">IDENTITY</span></p>
-  <div class="bar-tools">
-    <button type="button" class="pill" id="palette-btn" data-cursor="palette">
-      <span class="pill-swatch" id="palette-swatch" aria-hidden="true"></span>
-      <span class="pill-label">DITHER:<b id="palette-name">WIRED</b></span>
-    </button>
-  </div>
+<header class="bar">
+  <a class="bar-name" href="#top">Sanjay J</a>
+  <nav class="bar-nav" aria-label="Sections">
+    <a href="#work" data-scramble>Work</a>
+    <a href="#about" data-scramble>About</a>
+    <a href="#contact" data-scramble>Contact</a>
+  </nav>
+  <button type="button" class="swatch" id="palette-btn" aria-label="Change colours"><span id="palette-swatch" aria-hidden="true"></span></button>
 </header>
 
 <main id="main">
-  <!-- LAYER 01 -->
-  <section class="hero layer" id="top" data-layer="01" data-name="IDENTITY">
-    <div class="hero-meta">
-      <span>PRESENT DAY <b id="today">----.--.--</b></span>
-      <span>PRESENT TIME <b id="clock">--:--:--</b> IST</span>
+  <section class="hero" id="top">
+    <div class="hero-text">
+      <h1 class="glitch intro" data-text="SANJAY J">SANJAY J</h1>
+      <p class="hero-lede intro" style="--delay:.15s">
+        I build things to find out how they work: databases from the disk up, small
+        developer tools, and the occasional game.
+      </p>
     </div>
-
-    <div class="hero-grid">
-      <div class="hero-name">
-        <h1 class="glitch" data-text="SANJAY J">SANJAY J</h1>
-        <p class="kana" lang="ja" aria-hidden="true">サンジェイ</p>
-        <p class="hero-lede">
-          I build things to find out how they work. Databases from the disk up, small
-          developer tools, and the occasional game.
-        </p>
-        <p class="hero-cue"><a href="#projects" data-scramble>&gt; open /projects</a><span class="caret" aria-hidden="true"></span></p>
-      </div>
-
-      <figure class="window hero-portrait" data-cursor="lamp">
-        <div class="window-bar"><span>portrait.bmp</span></div>
-        <div class="window-body ratio-portrait">
-          <canvas class="dither" data-src="__BASE__images/profile.png" data-pixel="3" data-lamp role="img" aria-label="Portrait of Sanjay J"></canvas>
-        </div>
-        <figcaption>move the lamp</figcaption>
-      </figure>
-    </div>
+    <figure class="hero-portrait intro" style="--delay:.3s">
+      <canvas class="dither" data-src="__BASE__images/profile.png" data-pixel="3" data-lamp role="img" aria-label="Portrait of Sanjay J"></canvas>
+      <p class="kana" lang="ja" aria-hidden="true">サンジェイ</p>
+    </figure>
   </section>
 
-  <div class="ticker" aria-label="Database internals, B-trees, Go, TypeScript, React, Godot, C#, Docker, test-driven development, CI/CD, 3D art, chess">
-    <div class="ticker-track" id="ticker" aria-hidden="true"></div>
-  </div>
-
-  <!-- LAYER 02 -->
-  <section class="layer section" id="projects" data-layer="02" data-name="PROJECTS">
-    <div class="section-head">
-      <p class="tag">LAYER:02 <span lang="ja">記録</span></p>
-      <h2 class="display">Every process, newest first.</h2>
-      <p class="tag" id="proc-count">00 RUNNING</p>
-    </div>
-    <div class="proc" role="table" aria-label="Projects">
-      <div class="proc-head" role="row">
-        <span role="columnheader">PID</span><span role="columnheader">NAME</span><span role="columnheader">DESCRIPTION</span><span role="columnheader">YEAR</span>
-      </div>
-      <div id="proc-rows" role="rowgroup"></div>
-    </div>
+  <section class="section" id="work">
+    <h2 class="label">Work</h2>
+    <ol class="work" id="work-list"></ol>
   </section>
 
-  <!-- LAYER 03 -->
-  <section class="layer signal" id="signal" data-layer="03" data-name="SIGNAL">
-    <div class="signal-pin">
-      <div class="signal-head">
-        <p class="tag">LAYER:03 <span lang="ja">信号</span></p>
-        <span class="signal-progress" aria-hidden="true"><span id="signal-bar"></span></span>
-      </div>
-      <div class="signal-track" id="signal-track">
-        <div class="signal-intro">
-          <h2 class="display">Four signals worth tuning into.</h2>
-          <p>Scroll on. Each frame is dithered live in your browser, down to a handful of colours.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- LAYER 04 -->
-  <section class="layer section about" id="protocol" data-layer="04" data-name="PROTOCOL">
-    <p class="tag">LAYER:04 <span lang="ja">存在</span></p>
+  <section class="section about" id="about">
+    <h2 class="label">About</h2>
     <p class="scrub" id="scrub">I'm Sanjay, a computer science engineer who learns by building the thing itself. I've written a database from its B-tree up, a webhook tester driven entirely by tests, a flashcard generator for language learning, and a handful of small games. Away from the keyboard I make 3D art and play chess. Both reward patience the way good systems do.</p>
     <dl class="facts">
-      <div><dt>interests</dt><dd>Storage engines, indexing, systems that explain themselves</dd></div>
-      <div><dt>toolbox</dt><dd>Go, TypeScript, React, Godot, C#, Docker, GitHub Actions</dd></div>
-      <div><dt>last_dispatch</dt><dd>A write-up on building my own Google File System</dd></div>
-      <div><dt>off_hours</dt><dd>3D art, chess</dd></div>
+      <div><dt>Interests</dt><dd>Storage engines, indexing, systems that explain themselves</dd></div>
+      <div><dt>Toolbox</dt><dd>Go, TypeScript, React, Godot, C#, Docker</dd></div>
+      <div><dt>Writing</dt><dd>Building my own Google File System, on the blog</dd></div>
+      <div><dt>Off hours</dt><dd>3D art, chess</dd></div>
     </dl>
   </section>
 
-  <!-- LAYER 05 -->
-  <section class="layer section connect" id="connect" data-layer="05" data-name="CONNECT">
-    <p class="tag">LAYER:05 <span lang="ja">接続</span></p>
+  <section class="section contact" id="contact">
+    <h2 class="label">Contact</h2>
     <ul class="links">
-      <li><a href="https://blog.sanjayj.dev" target="_blank" rel="noopener noreferrer" data-cursor="visit"><span class="link-label" data-scramble>BLOG</span><span class="link-note">long-form logs</span><span class="link-arrow" aria-hidden="true">↗</span></a></li>
-      <li><a href="https://github.com/sanjayj369" target="_blank" rel="noopener noreferrer" data-cursor="visit"><span class="link-label" data-scramble>GITHUB</span><span class="link-note">source, mostly Go</span><span class="link-arrow" aria-hidden="true">↗</span></a></li>
-      <li><a href="https://linkedin.com/in/j-sanjay" target="_blank" rel="noopener noreferrer" data-cursor="visit"><span class="link-label" data-scramble>LINKEDIN</span><span class="link-note">the formal channel</span><span class="link-arrow" aria-hidden="true">↗</span></a></li>
-      <li><a href="https://bit.ly/sanjay-j-resume" target="_blank" rel="noopener noreferrer" data-cursor="visit"><span class="link-label" data-scramble>RESUME</span><span class="link-note">one page</span><span class="link-arrow" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://blog.sanjayj.dev" target="_blank" rel="noopener noreferrer"><span data-scramble>Blog</span><span class="arrow" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://github.com/sanjayj369" target="_blank" rel="noopener noreferrer"><span data-scramble>GitHub</span><span class="arrow" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://linkedin.com/in/j-sanjay" target="_blank" rel="noopener noreferrer"><span data-scramble>LinkedIn</span><span class="arrow" aria-hidden="true">↗</span></a></li>
+      <li><a href="https://bit.ly/sanjay-j-resume" target="_blank" rel="noopener noreferrer"><span data-scramble>Resume</span><span class="arrow" aria-hidden="true">↗</span></a></li>
     </ul>
-    <p class="sign-off">you are connected.</p>
     <footer class="foot">
-      <span>CLOSE THE WORLD. OPEN THE NEXT.</span>
-      <a href="__V1_URL__">previous edition (v1) ↩</a>
-      <a href="#top">return to layer:01 ↑</a>
+      <span>India · <span id="clock">--:--</span> IST</span>
+      <a href="__V1_URL__">Previous version</a>
     </footer>
   </section>
 </main>
 
-<!-- Entry window -->
 <div class="entry" id="entry" hidden>
   <div class="entry-scrim" data-close></div>
-  <article class="window entry-window" role="dialog" aria-modal="true" aria-labelledby="entry-title">
-    <div class="window-bar">
-      <span id="entry-file">entry.md</span>
-      <button type="button" class="entry-close" data-close aria-label="Close entry">[×]</button>
-    </div>
+  <article class="entry-window" role="dialog" aria-modal="true" aria-labelledby="entry-title">
+    <button type="button" class="entry-close" data-close aria-label="Close project">×</button>
     <div class="entry-scroll" id="entry-scroll" data-native-scroll>
-      <div class="entry-head">
-        <p class="tag" id="entry-pid">PID 0000</p>
+      <header class="entry-head">
         <h2 class="entry-title glitch" id="entry-title" data-text=""></h2>
         <p class="entry-lede" id="entry-lede"></p>
         <dl class="entry-meta" id="entry-meta"></dl>
+      </header>
+      <div class="entry-plate" id="entry-plate">
+        <canvas class="dither" id="entry-canvas" data-pixel="3" aria-hidden="true"></canvas>
+        <img id="entry-img" alt="">
       </div>
-      <div class="entry-plate"><canvas class="dither" id="entry-plate" data-pixel="2" role="img" aria-label=""></canvas></div>
       <div class="prose" id="entry-body"></div>
-      <button type="button" class="entry-next" id="entry-next" data-cursor="next">
-        <span class="tag">NEXT PROCESS</span>
+      <button type="button" class="entry-next" id="entry-next">
+        <span class="label">Next</span>
         <span class="entry-next-title" id="entry-next-title"></span>
       </button>
     </div>
   </article>
 </div>
 
-<!-- Cursor-follow preview for the process table -->
-<div class="peek" id="peek" aria-hidden="true">
-  <div class="window peek-window">
-    <div class="window-bar"><span id="peek-name">preview</span></div>
-    <div class="peek-strip" id="peek-strip"></div>
-  </div>
-</div>
-
-<div class="cursor" id="cursor" aria-hidden="true"><span class="cursor-label" id="cursor-label"></span></div>
+<div class="peek" id="peek" aria-hidden="true"><div class="peek-frame" id="peek-frame"></div></div>
+<div class="cursor" id="cursor" aria-hidden="true"></div>
 <div class="crt" aria-hidden="true"></div>
