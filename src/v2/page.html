@@ -34,25 +34,9 @@
 <main id="main">
   <!-- LAYER 01 -->
   <section class="hero layer" id="top" data-layer="01" data-name="IDENTITY">
-    <svg class="wires" viewBox="0 0 1600 420" preserveAspectRatio="none" aria-hidden="true">
-      <g class="pole" transform="translate(1180 0)">
-        <rect x="-7" y="10" width="14" height="420" />
-        <rect x="-90" y="40" width="180" height="9" />
-        <rect x="-70" y="96" width="140" height="7" />
-        <rect x="-78" y="49" width="6" height="14" /><rect x="72" y="49" width="6" height="14" />
-        <rect x="-58" y="103" width="6" height="12" /><rect x="52" y="103" width="6" height="12" />
-      </g>
-      <path class="wire w1" d="M-20 70 Q 560 210 1105 58" />
-      <path class="wire w2" d="M-20 120 Q 560 260 1105 58" />
-      <path class="wire w3" d="M-20 150 Q 580 300 1125 112" />
-      <path class="wire w4" d="M1255 58 Q 1430 120 1620 90" />
-      <path class="wire w5" d="M1235 112 Q 1430 190 1620 150" />
-    </svg>
-
     <div class="hero-meta">
       <span>PRESENT DAY <b id="today">----.--.--</b></span>
       <span>PRESENT TIME <b id="clock">--:--:--</b> IST</span>
-      <span id="entries-meta">ENTRIES 00</span>
     </div>
 
     <div class="hero-grid">
@@ -67,11 +51,11 @@
       </div>
 
       <figure class="window hero-portrait" data-cursor="lamp">
-        <div class="window-bar"><span>portrait.bmp</span><span class="window-btns" aria-hidden="true"><i></i><i></i><i></i></span></div>
+        <div class="window-bar"><span>portrait.bmp</span></div>
         <div class="window-body ratio-portrait">
           <canvas class="dither" data-src="__BASE__images/profile.png" data-pixel="3" data-lamp role="img" aria-label="Portrait of Sanjay J"></canvas>
         </div>
-        <figcaption>551×720 → 8 colours. move the lamp.</figcaption>
+        <figcaption>move the lamp</figcaption>
       </figure>
     </div>
   </section>
@@ -89,7 +73,7 @@
     </div>
     <div class="proc" role="table" aria-label="Projects">
       <div class="proc-head" role="row">
-        <span role="columnheader">PID</span><span role="columnheader">NAME</span><span role="columnheader">DESCRIPTION</span><span role="columnheader">TAGS</span><span role="columnheader">YEAR</span>
+        <span role="columnheader">PID</span><span role="columnheader">NAME</span><span role="columnheader">DESCRIPTION</span><span role="columnheader">YEAR</span>
       </div>
       <div id="proc-rows" role="rowgroup"></div>
     </div>
@@ -132,7 +116,7 @@
       <li><a href="https://linkedin.com/in/j-sanjay" target="_blank" rel="noopener noreferrer" data-cursor="visit"><span class="link-label" data-scramble>LINKEDIN</span><span class="link-note">the formal channel</span><span class="link-arrow" aria-hidden="true">↗</span></a></li>
       <li><a href="https://bit.ly/sanjay-j-resume" target="_blank" rel="noopener noreferrer" data-cursor="visit"><span class="link-label" data-scramble>RESUME</span><span class="link-note">one page</span><span class="link-arrow" aria-hidden="true">↗</span></a></li>
     </ul>
-    <p class="sign-off glitch" data-text="YOU ARE CONNECTED.">YOU ARE CONNECTED.</p>
+    <p class="sign-off">you are connected.</p>
     <footer class="foot">
       <span>CLOSE THE WORLD. OPEN THE NEXT.</span>
       <a href="__V1_URL__">previous edition (v1) ↩</a>
@@ -174,5 +158,5 @@
   </div>
 </div>
 
-<div class="cursor" id="cursor" aria-hidden="true"><span class="cursor-x"></span><span class="cursor-y"></span><span class="cursor-label" id="cursor-label"></span></div>
+<div class="cursor" id="cursor" aria-hidden="true"><span class="cursor-label" id="cursor-label"></span></div>
 <div class="crt" aria-hidden="true"></div>

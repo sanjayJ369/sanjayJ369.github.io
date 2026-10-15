@@ -74,7 +74,7 @@
       this.start = -1;
       this.light = { x: 0.5, y: 0.4, on: 0 };
       this.glitchUntil = 0;
-      this.nextGlitch = performance.now() + 2500 + Math.random() * 5000;
+      this.nextGlitch = performance.now() + 6000 + Math.random() * 9000;
       this.dirty = true;
       Dither.all.add(this);
       Dither.io.observe(canvas);
@@ -187,7 +187,7 @@
       }
       if (!reduced && now > this.nextGlitch) {
         this.glitchUntil = now + 160 + Math.random() * 200;
-        this.nextGlitch = now + 4000 + Math.random() * 7000;
+        this.nextGlitch = now + 12000 + Math.random() * 14000;
       }
       if (now < this.glitchUntil + 20) this.dirty = true;
       if (this.dirty) {
@@ -296,7 +296,6 @@
   const year = (p) => p.date.slice(0, 4);
   const pid = (i) => pad(1000 + (PROJECTS.length - i) * 37, 4);
 
-  $("#entries-meta").textContent = `ENTRIES ${pad(PROJECTS.length)}`;
   $("#proc-count").textContent = `${pad(PROJECTS.length)} RUNNING`;
 
   $("#proc-rows").innerHTML = PROJECTS.map((p, i) => `
@@ -304,14 +303,13 @@
       <span class="proc-pid" role="cell">${pid(i)}</span>
       <span class="proc-name" role="cell"><span data-scramble>${p.title}</span></span>
       <span class="proc-desc" role="cell">${p.description}</span>
-      <span class="proc-tags" role="cell">${p.tags.slice(0, 3).join(" / ")}</span>
       <span class="proc-year" role="cell">${year(p)}</span>
     </button>`).join("");
 
   const featured = FEATURED.map((s) => PROJECTS.find((p) => p.slug === s)).filter(Boolean);
   $("#signal-track").insertAdjacentHTML("beforeend", featured.map((p, i) => `
     <button type="button" class="window signal-card" data-slug="${p.slug}" data-cursor="read">
-      <span class="window-bar"><span>signal_${pad(i + 1)} :: ${p.slug}</span><span class="window-btns" aria-hidden="true"><i></i><i></i><i></i></span></span>
+      <span class="window-bar"><span>${pad(i + 1)} — ${p.slug}</span></span>
       <span class="window-body" style="display:block"><span style="display:block"><canvas class="dither" data-src="${p.image}" data-pixel="2" role="img" aria-label="${p.title}"></canvas></span></span>
       <span class="signal-meta"><span class="signal-title">${p.title}</span><span class="signal-desc">${p.description}</span></span>
     </button>`).join(""));
@@ -320,7 +318,7 @@
     ["DATABASE INTERNALS", "記憶"], ["B-TREES", ""], ["GO", "接続"], ["TYPESCRIPT", ""], ["REACT", ""],
     ["GODOT", "遊戯"], ["C#", ""], ["DOCKER", ""], ["TEST-DRIVEN", "検証"], ["CI/CD", ""], ["3D ART", "造形"], ["CHESS", "将棋"],
   ];
-  const tickerRow = words.map(([w, j]) => `<span>${w}${j ? ` <span lang="ja">${j}</span>` : ""} ///</span>`).join("");
+  const tickerRow = words.map(([w, j]) => `<span>${w}${j ? ` <span lang="ja">${j}</span>` : ""}</span><span aria-hidden="true">·</span>`).join("");
   $("#ticker").innerHTML = tickerRow + tickerRow;
 
   /* Peek window (cursor-follow preview) */
@@ -454,7 +452,7 @@
         return r.bottom > 0 && r.top < innerHeight && el.offsetParent;
       });
       if (visible.length) glitchOnce(visible[(Math.random() * visible.length) | 0]);
-      setTimeout(loop, 2600 + Math.random() * 3800);
+      setTimeout(loop, 7000 + Math.random() * 6000);
     })();
   }
 
@@ -513,7 +511,6 @@
      Cursor
      ------------------------------------------------------------------ */
   const cursor = $("#cursor"), cursorLabel = $("#cursor-label");
-  const cx = $(".cursor-x", cursor), cy = $(".cursor-y", cursor);
   let mouse = { x: -100, y: -100 }, cpos = { x: -100, y: -100 };
   addEventListener("pointermove", (e) => {
     mouse = { x: e.clientX, y: e.clientY };
@@ -559,8 +556,6 @@
     cpos.x = lerp(cpos.x, mouse.x, 0.35);
     cpos.y = lerp(cpos.y, mouse.y, 0.35);
     cursor.style.transform = `translate3d(${cpos.x}px, ${cpos.y}px, 0)`;
-    cx.textContent = `X:${pad(Math.round(mouse.x), 4)}`;
-    cy.textContent = `Y:${pad(Math.round(mouse.y + scrollY), 5)}`;
 
     if (!reduced) {
       // Ticker leans and speeds with scroll velocity.
